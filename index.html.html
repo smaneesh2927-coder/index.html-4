@@ -1,0 +1,1918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cure.ai — AI Health & Well-being</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=Noto+Sans+Tamil:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<style>
+:root {
+  --mint: #00C896;
+  --mint-light: #e6faf5;
+  --mint-dark: #008f6a;
+  --navy: #0a1628;
+  --navy2: #112240;
+  --slate: #1e3a5f;
+  --white: #ffffff;
+  --soft: #f4f9f7;
+  --muted: #6b8fa8;
+  --danger: #ff4d6d;
+  --warn: #ffb347;
+  --info: #4da6ff;
+  --border: rgba(0,200,150,0.15);
+  --card: rgba(255,255,255,0.04);
+  --radius: 16px;
+  --shadow: 0 8px 32px rgba(0,0,0,0.25);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);min-height:100vh;overflow-x:hidden}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;backdrop-filter:blur(20px);background:rgba(10,22,40,0.85);border-bottom:1px solid var(--border);padding:0 2rem;height:64px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;color:var(--white)}.logo span{color:var(--mint)}
+.nav-links{display:flex;gap:0;list-style:none}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:.85rem;padding:.5rem .9rem;border-radius:8px;transition:all .2s;font-weight:500}
+.nav-links a:hover,.nav-links a.active{color:var(--white);background:rgba(0,200,150,0.12)}
+.nav-cta{background:var(--mint);color:var(--navy)!important;padding:.5rem 1.2rem!important;border-radius:8px;font-weight:600!important}
+.nav-cta:hover{background:var(--mint-dark)!important;color:var(--white)!important}
+.settings-nav-btn{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:var(--white);width:36px;height:36px;border-radius:8px;cursor:pointer;font-size:1rem;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.settings-nav-btn:hover{background:rgba(0,200,150,0.15);border-color:var(--mint)}
+
+/* SETTINGS PANEL */
+.settings-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:3000;justify-content:flex-end;backdrop-filter:blur(4px)}
+.settings-overlay.open{display:flex}
+.settings-panel{background:#0d1e36;border-left:1px solid var(--border);width:360px;height:100%;overflow-y:auto;padding:1.5rem;animation:slideIn .25s ease}
+@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+.settings-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.75rem;padding-bottom:1rem;border-bottom:1px solid var(--border)}
+.settings-title-row{display:flex;align-items:center;gap:.6rem}
+.settings-icon{font-size:1.2rem}
+.settings-title{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700}
+.settings-close{background:rgba(255,255,255,0.08);border:none;color:var(--white);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1rem}
+.settings-section{margin-bottom:1.75rem}
+.settings-section-label{font-size:.78rem;font-weight:700;color:var(--mint);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.85rem}
+.lang-options{display:flex;flex-direction:column;gap:.5rem}
+.lang-btn{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:.85rem 1rem;display:flex;align-items:center;gap:.85rem;cursor:pointer;transition:all .2s;text-align:left;color:var(--white)}
+.lang-btn:hover{border-color:rgba(0,200,150,0.4);background:rgba(0,200,150,0.06)}
+.lang-btn.active{border-color:var(--mint);background:rgba(0,200,150,0.1)}
+.lang-flag{font-size:1.5rem;flex-shrink:0}
+.lang-name{font-weight:600;font-size:.9rem}
+.lang-native{font-size:.8rem;color:var(--muted)}
+.lang-check{margin-left:auto;color:var(--mint);font-weight:700;font-size:1rem}
+.region-options{display:flex;flex-direction:column;gap:.45rem}
+.region-btn{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:.75rem 1rem;display:flex;align-items:center;gap:.75rem;cursor:pointer;transition:all .2s;text-align:left;color:var(--white);font-size:1.1rem}
+.region-btn:hover{border-color:rgba(0,200,150,0.35);background:rgba(0,200,150,0.05)}
+.region-btn.active{border-color:var(--mint);background:rgba(0,200,150,0.08)}
+.region-name{font-weight:600;font-size:.85rem}
+.region-sub{font-size:.75rem;color:var(--muted)}
+.emergency-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.em-card{background:rgba(255,77,109,0.07);border:1px solid rgba(255,77,109,0.2);border-radius:10px;padding:.75rem;text-align:center}
+.em-num{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;color:var(--danger)}
+.em-label{font-size:.72rem;color:var(--muted);margin-top:.2rem}
+.settings-footer{font-size:.75rem;color:var(--muted);text-align:center;padding-top:1rem;border-top:1px solid var(--border)}
+/* Tamil font support */
+.lang-ta{font-family:'Noto Sans Tamil',sans-serif}
+
+/* HERO */
+#home{min-height:100vh;display:flex;align-items:center;padding:80px 2rem 2rem;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(0,200,150,0.12) 0%,transparent 70%)}
+.hero-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center}
+.hero-badge{display:inline-flex;align-items:center;gap:.5rem;background:rgba(0,200,150,0.12);border:1px solid rgba(0,200,150,0.3);color:var(--mint);font-size:.8rem;padding:.4rem .9rem;border-radius:999px;margin-bottom:1.5rem;font-weight:500}
+.hero-badge span{width:6px;height:6px;background:var(--mint);border-radius:50%;animation:pulse 2s infinite}
+h1{font-family:'Syne',sans-serif;font-size:3.2rem;font-weight:800;line-height:1.15;margin-bottom:1rem}
+h1 .accent{color:var(--mint)}
+.hero-sub{color:var(--muted);font-size:1.05rem;line-height:1.7;margin-bottom:2rem}
+.hero-btns{display:flex;gap:1rem;flex-wrap:wrap}
+.btn-primary{background:var(--mint);color:var(--navy);padding:.85rem 2rem;border-radius:12px;font-weight:700;font-size:.95rem;text-decoration:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
+.btn-primary:hover{background:var(--mint-dark);color:var(--white);transform:translateY(-2px)}
+.btn-outline{background:transparent;color:var(--white);padding:.85rem 2rem;border-radius:12px;font-weight:600;font-size:.95rem;text-decoration:none;border:1px solid rgba(255,255,255,0.2);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
+.btn-outline:hover{border-color:var(--mint);color:var(--mint)}
+.hero-stats{display:flex;gap:2rem;margin-top:2.5rem}
+.stat{text-align:left}.stat-num{font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;color:var(--mint)}.stat-label{font-size:.8rem;color:var(--muted)}
+.hero-visual{position:relative}
+.hero-card{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:20px;padding:1.5rem;backdrop-filter:blur(10px)}
+.vitals-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem}
+.vital{background:rgba(0,200,150,0.06);border:1px solid rgba(0,200,150,0.15);border-radius:12px;padding:.9rem;text-align:center}
+.vital-val{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:700;color:var(--mint)}
+.vital-label{font-size:.72rem;color:var(--muted);margin-top:.2rem}
+.ai-chat{background:rgba(0,200,150,0.04);border:1px solid rgba(0,200,150,0.12);border-radius:12px;padding:1rem}
+.chat-msg{display:flex;gap:.6rem;align-items:flex-start;margin-bottom:.7rem}
+.chat-avatar{width:28px;height:28px;border-radius:8px;background:var(--mint);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:var(--navy);flex-shrink:0}
+.chat-bubble{background:rgba(255,255,255,0.06);border-radius:8px;padding:.5rem .75rem;font-size:.8rem;color:#cce}
+.chat-bubble.ai{background:rgba(0,200,150,0.12);color:#e0fff8}
+
+/* SECTIONS */
+section{padding:80px 2rem}
+.section-inner{max-width:1100px;margin:0 auto}
+.section-label{font-size:.8rem;font-weight:600;color:var(--mint);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.75rem}
+.section-title{font-family:'Syne',sans-serif;font-size:2.2rem;font-weight:800;margin-bottom:.75rem}
+.section-sub{color:var(--muted);font-size:1rem;max-width:560px;line-height:1.7}
+
+/* FEATURES GRID */
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:3rem}
+.feature-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:var(--radius);padding:1.75rem;cursor:pointer;transition:all .25s;text-decoration:none;color:var(--white);display:block}
+.feature-card:hover{background:rgba(0,200,150,0.06);border-color:rgba(0,200,150,0.3);transform:translateY(-4px)}
+.feature-icon{width:48px;height:48px;border-radius:12px;background:rgba(0,200,150,0.12);display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:1rem}
+.feature-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:.5rem}
+.feature-desc{font-size:.85rem;color:var(--muted);line-height:1.6}
+
+/* HEALTH MONITOR */
+#monitor{background:var(--navy2)}
+.monitor-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:3rem}
+.monitor-card{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem}
+.monitor-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem}
+.monitor-title{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--mint);animation:pulse 2s infinite}
+.vitals-list{display:flex;flex-direction:column;gap:.75rem}
+.vital-row{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;background:rgba(255,255,255,0.03);border-radius:10px}
+.vital-name{font-size:.85rem;color:var(--muted);display:flex;align-items:center;gap:.5rem}
+.vital-value{font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem}
+.vital-value.good{color:var(--mint)}.vital-value.warn{color:var(--warn)}.vital-value.bad{color:var(--danger)}
+.progress-bar{height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;margin-top:.4rem}
+.progress-fill{height:100%;border-radius:3px;transition:width 1s ease}
+.fill-good{background:var(--mint)}.fill-warn{background:var(--warn)}.fill-bad{background:var(--danger)}
+.log-btn{background:var(--mint);color:var(--navy);border:none;padding:.65rem 1.2rem;border-radius:10px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.85rem;width:100%;margin-top:1rem;transition:all .2s}
+.log-btn:hover{background:var(--mint-dark);color:var(--white)}
+.input-row{display:flex;gap:.5rem;margin-top:.5rem}
+.mini-input{background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:8px;padding:.5rem .75rem;color:var(--white);font-family:'DM Sans',sans-serif;font-size:.85rem;flex:1;outline:none}
+.mini-input:focus{border-color:var(--mint)}
+.mini-btn{background:var(--mint);color:var(--navy);border:none;border-radius:8px;padding:.5rem .9rem;cursor:pointer;font-weight:700;font-size:.85rem}
+
+/* SYMPTOM CHECKER */
+#symptoms{background:var(--navy)}
+.symptom-section{margin-top:3rem;display:grid;grid-template-columns:1.2fr 1fr;gap:2rem}
+.symptom-picker{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem}
+.category-tabs{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem}
+.cat-tab{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:.4rem .85rem;font-size:.8rem;cursor:pointer;transition:all .2s;color:var(--muted)}
+.cat-tab:hover,.cat-tab.active{background:rgba(0,200,150,0.15);border-color:var(--mint);color:var(--mint)}
+.symptoms-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;max-height:320px;overflow-y:auto}
+.symptom-chip{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:.5rem .75rem;font-size:.8rem;cursor:pointer;transition:all .2s;color:var(--muted)}
+.symptom-chip:hover{border-color:var(--mint);color:var(--mint)}
+.symptom-chip.selected{background:rgba(0,200,150,0.15);border-color:var(--mint);color:var(--mint)}
+.selected-area{margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem}
+.selected-label{font-size:.8rem;color:var(--muted);margin-bottom:.5rem}
+.selected-chips{display:flex;flex-wrap:wrap;gap:.4rem}
+.sel-chip{background:var(--mint);color:var(--navy);border-radius:999px;padding:.3rem .8rem;font-size:.75rem;font-weight:700;display:flex;align-items:center;gap:.3rem}
+.sel-chip button{background:none;border:none;color:var(--navy);cursor:pointer;font-size:.9rem;line-height:1}
+.analyze-btn{width:100%;background:var(--mint);color:var(--navy);border:none;padding:.85rem;border-radius:12px;font-weight:700;font-size:.95rem;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:1rem;transition:all .2s}
+.analyze-btn:hover{background:var(--mint-dark);color:var(--white)}
+.ai-result{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem}
+.result-title{font-family:'Syne',sans-serif;font-weight:700;margin-bottom:1rem;font-size:1rem}
+.disease-result{background:rgba(0,200,150,0.06);border:1px solid rgba(0,200,150,0.2);border-radius:12px;padding:1rem;margin-bottom:.75rem}
+.disease-name{font-weight:700;font-size:.95rem;margin-bottom:.3rem}
+.disease-match{font-size:.8rem;color:var(--mint)}
+.match-bar{height:4px;background:rgba(255,255,255,0.08);border-radius:2px;margin-top:.5rem;overflow:hidden}
+.match-fill{height:100%;background:var(--mint);border-radius:2px}
+.result-disclaimer{font-size:.75rem;color:var(--muted);margin-top:1rem;line-height:1.5;border-top:1px solid var(--border);padding-top:1rem}
+.result-placeholder{text-align:center;padding:3rem 1rem;color:var(--muted)}
+.result-placeholder .icon{font-size:2.5rem;margin-bottom:.75rem}
+
+/* DISEASE DATABASE */
+#diseases{background:var(--navy2)}
+.disease-db{margin-top:3rem}
+.db-search{display:flex;gap:.75rem;margin-bottom:1.5rem}
+.db-input{flex:1;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:12px;padding:.85rem 1.25rem;color:var(--white);font-family:'DM Sans',sans-serif;font-size:.95rem;outline:none}
+.db-input:focus{border-color:var(--mint)}
+.db-input::placeholder{color:var(--muted)}
+.db-search-btn{background:var(--mint);color:var(--navy);border:none;border-radius:12px;padding:.85rem 1.5rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif}
+.disease-cats{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem}
+.disease-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+.d-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius);padding:1.25rem;cursor:pointer;transition:all .2s}
+.d-card:hover{border-color:var(--mint);background:rgba(0,200,150,0.05)}
+.d-card-top{display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem}
+.d-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.d-name{font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem}
+.d-category{font-size:.75rem;color:var(--muted)}
+.d-desc{font-size:.8rem;color:var(--muted);line-height:1.5;margin-bottom:.75rem}
+.d-tags{display:flex;gap:.4rem;flex-wrap:wrap}
+.d-tag{font-size:.7rem;background:rgba(255,255,255,0.06);border-radius:6px;padding:.2rem .55rem;color:var(--muted)}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:2000;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+.modal-overlay.open{display:flex}
+.modal{background:#0d1e36;border:1px solid var(--border);border-radius:24px;padding:2rem;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;position:relative}
+.modal-close{position:absolute;top:1rem;right:1rem;background:rgba(255,255,255,0.08);border:none;color:var(--white);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1.1rem}
+.modal h2{font-family:'Syne',sans-serif;font-weight:800;margin-bottom:.5rem}
+.modal-badge{display:inline-block;background:rgba(0,200,150,0.12);color:var(--mint);font-size:.75rem;padding:.3rem .75rem;border-radius:6px;margin-bottom:1rem}
+.modal p{font-size:.9rem;color:var(--muted);line-height:1.7;margin-bottom:1rem}
+.modal-section{margin-bottom:1.25rem}
+.modal-section h3{font-size:.85rem;font-weight:600;color:var(--white);margin-bottom:.5rem}
+.modal-list{list-style:none;display:flex;flex-direction:column;gap:.4rem}
+.modal-list li{font-size:.85rem;color:var(--muted);padding:.5rem .75rem;background:rgba(255,255,255,0.03);border-radius:8px;display:flex;align-items:center;gap:.5rem}
+.modal-list li::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--mint);flex-shrink:0}
+
+/* DOCTOR CONSULT */
+#consult{background:var(--navy)}
+.doctors-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:3rem}
+.doctor-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius);padding:1.5rem;transition:all .25s}
+.doctor-card:hover{border-color:rgba(0,200,150,0.3);transform:translateY(-3px)}
+.doc-avatar{width:56px;height:56px;border-radius:14px;background:rgba(0,200,150,0.12);display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin-bottom:1rem}
+.doc-name{font-family:'Syne',sans-serif;font-weight:700;margin-bottom:.25rem}
+.doc-spec{font-size:.82rem;color:var(--mint);margin-bottom:.5rem}
+.doc-meta{display:flex;gap:.75rem;margin-bottom:1rem}
+.doc-meta span{font-size:.78rem;color:var(--muted)}
+.availability{display:flex;align-items:center;gap:.4rem;font-size:.78rem;margin-bottom:1rem}
+.avail-dot{width:6px;height:6px;border-radius:50%}
+.avail-dot.online{background:var(--mint)}.avail-dot.busy{background:var(--warn)}
+.book-btn{width:100%;background:rgba(0,200,150,0.12);color:var(--mint);border:1px solid rgba(0,200,150,0.25);padding:.65rem;border-radius:10px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.85rem;transition:all .2s}
+.book-btn:hover{background:var(--mint);color:var(--navy)}
+
+/* HOSPITAL MAP */
+#hospitals{background:var(--navy2)}
+.map-wrapper{margin-top:3rem;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border)}
+#map{height:420px;width:100%}
+.map-controls{display:flex;gap:.75rem;margin-bottom:1rem;flex-wrap:wrap}
+.map-btn{background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--white);padding:.55rem 1.1rem;border-radius:10px;cursor:pointer;font-size:.85rem;font-family:'DM Sans',sans-serif;transition:all .2s}
+.map-btn:hover,.map-btn.active{background:rgba(0,200,150,0.15);border-color:var(--mint);color:var(--mint)}
+
+/* BMI */
+#bmi{background:var(--navy)}
+.bmi-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:3rem}
+.bmi-form{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius);padding:1.75rem}
+.form-group{margin-bottom:1.25rem}
+.form-label{font-size:.85rem;color:var(--muted);margin-bottom:.5rem;display:block}
+.form-input{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:.75rem 1rem;color:var(--white);font-family:'DM Sans',sans-serif;font-size:.95rem;outline:none;transition:all .2s}
+.form-input:focus{border-color:var(--mint)}
+.unit-toggle{display:flex;gap:.5rem;margin-bottom:1.25rem}
+.unit-btn{flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:var(--muted);padding:.6rem;border-radius:8px;cursor:pointer;font-size:.85rem;font-family:'DM Sans',sans-serif;transition:all .2s}
+.unit-btn.active{background:rgba(0,200,150,0.15);border-color:var(--mint);color:var(--mint);font-weight:700}
+.calc-btn{width:100%;background:var(--mint);color:var(--navy);border:none;padding:.9rem;border-radius:12px;font-weight:700;font-size:1rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;margin-top:.5rem}
+.calc-btn:hover{background:var(--mint-dark);color:var(--white)}
+.bmi-result{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius);padding:1.75rem;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.bmi-num{font-family:'Syne',sans-serif;font-size:4rem;font-weight:800;line-height:1}
+.bmi-label{font-size:1rem;font-weight:600;margin:.5rem 0}
+.bmi-scale{width:100%;margin:1.5rem 0}
+.scale-bar{height:12px;border-radius:6px;background:linear-gradient(to right,#4da6ff 0%,#00C896 25%,#ffb347 60%,#ff4d6d 100%);margin-bottom:.5rem;position:relative}
+.scale-marker{position:absolute;top:-4px;width:20px;height:20px;background:var(--white);border-radius:50%;border:3px solid var(--navy);transform:translateX(-50%);transition:left .5s ease}
+.scale-labels{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted)}
+.bmi-tips{margin-top:1rem;font-size:.85rem;color:var(--muted);text-align:center;line-height:1.6}
+
+/* AI CHAT */
+#ai-chat{background:var(--navy2)}
+.chat-container{margin-top:3rem;display:grid;grid-template-columns:1fr 320px;gap:2rem}
+.chat-main{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius);display:flex;flex-direction:column;height:500px}
+.chat-head{padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.75rem}
+.ai-avatar{width:36px;height:36px;border-radius:10px;background:var(--mint);display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:800;color:var(--navy)}
+.chat-name{font-weight:600;font-size:.9rem}
+.chat-status{font-size:.75rem;color:var(--mint);display:flex;align-items:center;gap:.3rem}
+.chat-messages{flex:1;overflow-y:auto;padding:1.25rem;display:flex;flex-direction:column;gap:.75rem}
+.msg{max-width:85%;padding:.75rem 1rem;border-radius:12px;font-size:.85rem;line-height:1.6}
+.msg.ai{background:rgba(0,200,150,0.08);border:1px solid rgba(0,200,150,0.15);align-self:flex-start;color:#e0fff8}
+.msg.user{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);align-self:flex-end;color:var(--white)}
+.chat-input-area{padding:1rem;border-top:1px solid var(--border);display:flex;gap:.75rem}
+.chat-input{flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:.7rem 1rem;color:var(--white);font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none;resize:none;height:44px}
+.chat-input:focus{border-color:var(--mint)}
+.send-btn{background:var(--mint);color:var(--navy);border:none;border-radius:10px;padding:.7rem 1.1rem;cursor:pointer;font-size:1.1rem;transition:all .2s}
+.send-btn:hover{background:var(--mint-dark)}
+.chat-sidebar{display:flex;flex-direction:column;gap:1rem}
+.quick-card{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem}
+.quick-title{font-size:.85rem;font-weight:600;margin-bottom:.75rem;color:var(--muted)}
+.quick-chips{display:flex;flex-direction:column;gap:.4rem}
+.quick-chip{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:.55rem .85rem;font-size:.8rem;cursor:pointer;transition:all .2s;color:var(--muted);text-align:left}
+.quick-chip:hover{border-color:var(--mint);color:var(--mint)}
+
+/* FOOTER */
+footer{background:#060e1c;border-top:1px solid var(--border);padding:3rem 2rem 2rem}
+.footer-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:3rem}
+.footer-brand{}.footer-brand .logo{font-size:1.3rem;margin-bottom:.75rem;display:block}.footer-tagline{font-size:.85rem;color:var(--muted);line-height:1.6}
+.footer-col h4{font-size:.85rem;font-weight:700;margin-bottom:1rem;color:var(--white)}
+.footer-col ul{list-style:none;display:flex;flex-direction:column;gap:.5rem}
+.footer-col ul li a{font-size:.82rem;color:var(--muted);text-decoration:none;transition:color .2s}
+.footer-col ul li a:hover{color:var(--mint)}
+.footer-bottom{max-width:1100px;margin:2rem auto 0;border-top:1px solid var(--border);padding-top:1.5rem;display:flex;justify-content:space-between;align-items:center}
+.footer-note{font-size:.8rem;color:var(--muted)}
+
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.3)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.fade-up{animation:fadeUp .6s ease both}
+.delay-1{animation-delay:.1s}.delay-2{animation-delay:.2s}.delay-3{animation-delay:.3s}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(0,200,150,0.3);border-radius:3px}
+
+@media(max-width:900px){
+  .hero-inner,.monitor-grid,.symptom-section,.bmi-grid,.chat-container,.footer-inner{grid-template-columns:1fr}
+  .features-grid,.doctors-grid,.disease-cards{grid-template-columns:1fr 1fr}
+  h1{font-size:2.2rem}
+  .nav-links{display:none}
+}
+@media(max-width:600px){
+  .features-grid,.doctors-grid,.disease-cards{grid-template-columns:1fr}
+  .vitals-grid{grid-template-columns:1fr 1fr}
+}
+
+/* ── LOGIN PAGE ── */
+#loginPage{
+  display:flex;
+  position:fixed;
+  inset:0;
+  z-index:9000;
+  background:var(--navy);
+  overflow:hidden;
+  align-items:center;
+  justify-content:center;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(0,200,150,0.1) 0%,transparent 70%), var(--navy);
+}
+#loginPage.hidden{display:none}
+
+.login-left{
+  flex:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:3rem;
+  background:radial-gradient(ellipse 80% 80% at 0% 50%,rgba(0,200,150,0.13) 0%,transparent 70%);
+  position:relative;
+  overflow:hidden;
+  align-self:stretch;
+}
+.login-left-inner{max-width:420px;width:100%;position:relative;z-index:1}
+.login-brand{display:flex;align-items:center;gap:.75rem;margin-bottom:3rem}
+.login-brand-logo{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;color:var(--white)}.login-brand-logo span{color:var(--mint)}
+.login-badge{display:inline-flex;align-items:center;gap:.5rem;background:rgba(0,200,150,0.12);border:1px solid rgba(0,200,150,0.28);color:var(--mint);font-size:.78rem;padding:.35rem .85rem;border-radius:999px;font-weight:500;margin-bottom:1.25rem}
+.login-badge-dot{width:6px;height:6px;background:var(--mint);border-radius:50%;animation:pulse 2s infinite;flex-shrink:0}
+.login-heading{font-family:'Syne',sans-serif;font-size:2.6rem;font-weight:800;line-height:1.2;margin-bottom:.85rem}
+.login-heading .accent{color:var(--mint)}
+.login-sub{color:var(--muted);font-size:.95rem;line-height:1.7;margin-bottom:2.5rem}
+
+.login-features{display:flex;flex-direction:column;gap:.75rem}
+.lf-item{display:flex;align-items:center;gap:.85rem;padding:.85rem 1rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;transition:all .2s}
+.lf-item:hover{border-color:rgba(0,200,150,0.3);background:rgba(0,200,150,0.05)}
+.lf-icon{width:36px;height:36px;border-radius:10px;background:rgba(0,200,150,0.12);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+.lf-text{font-size:.85rem;font-weight:500;color:var(--white)}
+.lf-sub{font-size:.75rem;color:var(--muted)}
+
+/* Decorative blobs */
+.login-blob{position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none}
+.blob1{width:300px;height:300px;background:rgba(0,200,150,0.08);bottom:-80px;left:-80px}
+.blob2{width:200px;height:200px;background:rgba(77,166,255,0.07);top:60px;right:0}
+
+/* Form card */
+.login-right{
+  width:100%;
+  max-width:440px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:2.5rem 2.5rem;
+  background:#0d1e36;
+  border:1px solid var(--border);
+  border-radius:24px;
+  position:relative;
+  overflow-y:auto;
+  box-shadow:0 24px 64px rgba(0,0,0,0.4);
+}
+.login-form-wrap{width:100%;max-width:360px}
+.lf-title{font-family:'Syne',sans-serif;font-size:1.55rem;font-weight:800;margin-bottom:.3rem}
+.lf-desc{font-size:.85rem;color:var(--muted);margin-bottom:2rem}
+
+.login-tabs{display:flex;gap:.4rem;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:.3rem;margin-bottom:2rem}
+.ltab{flex:1;background:none;border:none;color:var(--muted);padding:.6rem;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:600;cursor:pointer;transition:all .2s}
+.ltab.active{background:rgba(0,200,150,0.15);color:var(--mint)}
+
+.lform-group{margin-bottom:1.1rem;position:relative}
+.lform-label{display:block;font-size:.8rem;color:var(--muted);margin-bottom:.45rem;font-weight:500}
+.lform-input{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:.78rem 1rem;color:var(--white);font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none;transition:all .2s}
+.lform-input:focus{border-color:var(--mint);background:rgba(0,200,150,0.05)}
+.lform-input::placeholder{color:rgba(107,143,168,0.6)}
+.input-icon{position:absolute;right:.9rem;top:2.15rem;color:var(--muted);font-size:.9rem;cursor:pointer;user-select:none}
+
+.lform-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem}
+.lform-check{display:flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.82rem;color:var(--muted)}
+.lform-check input{accent-color:var(--mint)}
+.lform-link{font-size:.82rem;color:var(--mint);text-decoration:none;font-weight:500}
+.lform-link:hover{color:var(--mint-dark)}
+
+.login-submit{width:100%;background:var(--mint);color:var(--navy);border:none;padding:.9rem;border-radius:12px;font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;cursor:pointer;transition:all .25s;position:relative;overflow:hidden;letter-spacing:.01em}
+.login-submit:hover{background:var(--mint-dark);color:var(--white);transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,200,150,0.3)}
+.login-submit:active{transform:translateY(0)}
+
+.login-divider{display:flex;align-items:center;gap:.85rem;margin:1.5rem 0;color:var(--muted);font-size:.8rem}
+.login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.08)}
+
+.social-btns{display:flex;gap:.75rem}
+.social-btn{flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:var(--white);padding:.7rem;border-radius:10px;font-size:.85rem;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:.5rem}
+.social-btn:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.2)}
+
+.login-footer-note{text-align:center;font-size:.78rem;color:var(--muted);margin-top:1.75rem}
+.login-footer-note a{color:var(--mint);font-weight:500;text-decoration:none}
+.login-footer-note a:hover{color:var(--mint-dark)}
+
+.lform-error{font-size:.78rem;color:var(--danger);margin-top:.3rem;display:none}
+.lform-group.error .lform-input{border-color:var(--danger)}
+.lform-group.error .lform-error{display:block}
+
+.lform-success{background:rgba(0,200,150,0.1);border:1px solid rgba(0,200,150,0.3);border-radius:10px;padding:.85rem 1rem;font-size:.85rem;color:var(--mint);display:none;margin-bottom:1rem;align-items:center;gap:.6rem}
+.lform-success.show{display:flex}
+
+/* Register extra fields */
+.register-only{display:none}
+.tab-register .register-only{display:block}
+
+@media(max-width:900px){
+  .login-left{display:none}
+  .login-right{width:100%;border-left:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN PAGE ── -->
+<div id="loginPage">
+  <!-- Right Panel – Form -->
+  <div class="login-right">
+    <div class="login-form-wrap" id="loginFormWrap">
+      <div class="lf-title">Welcome back</div>
+      <p class="lf-desc">Sign in to your Cure.ai account</p>
+
+      <!-- Tabs -->
+      <div class="login-tabs" id="loginTabs">
+        <button class="ltab active" id="tabSignin" onclick="switchTab('signin')">Sign In</button>
+        <button class="ltab" id="tabRegister" onclick="switchTab('register')">Create Account</button>
+      </div>
+
+      <!-- Success msg -->
+      <div class="lform-success" id="loginSuccess">
+        <span>✅</span><span id="loginSuccessMsg">Logged in successfully! Loading your dashboard…</span>
+      </div>
+
+      <!-- Name (register only) -->
+      <div class="lform-group register-only" id="fieldName">
+        <label class="lform-label" for="regName">Full Name</label>
+        <input class="lform-input" type="text" id="regName" placeholder="e.g. Arun Kumar" autocomplete="name">
+        <span class="lform-error" id="errName">Please enter your full name.</span>
+      </div>
+
+      <!-- Email -->
+      <div class="lform-group" id="fieldEmail">
+        <label class="lform-label" for="loginEmail">Email Address</label>
+        <input class="lform-input" type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email">
+        <span class="lform-error" id="errEmail">Please enter a valid email.</span>
+      </div>
+
+      <!-- Phone (register only) -->
+      <div class="lform-group register-only" id="fieldPhone">
+        <label class="lform-label" for="regPhone">Phone Number</label>
+        <input class="lform-input" type="tel" id="regPhone" placeholder="+91 98765 43210" autocomplete="tel">
+        <span class="lform-error" id="errPhone">Please enter a valid phone number.</span>
+      </div>
+
+      <!-- Password -->
+      <div class="lform-group" id="fieldPwd">
+        <label class="lform-label" for="loginPwd">Password</label>
+        <input class="lform-input" type="password" id="loginPwd" placeholder="••••••••" autocomplete="current-password">
+        <span class="input-icon" onclick="togglePwd('loginPwd',this)" title="Show/hide">👁️</span>
+        <span class="lform-error" id="errPwd">Password must be at least 6 characters.</span>
+      </div>
+
+      <!-- Confirm Password (register only) -->
+      <div class="lform-group register-only" id="fieldConfirm">
+        <label class="lform-label" for="regConfirm">Confirm Password</label>
+        <input class="lform-input" type="password" id="regConfirm" placeholder="••••••••" autocomplete="new-password">
+        <span class="input-icon" onclick="togglePwd('regConfirm',this)" title="Show/hide">👁️</span>
+        <span class="lform-error" id="errConfirm">Passwords do not match.</span>
+      </div>
+
+      <!-- Remember / Forgot -->
+      <div class="lform-row" id="rowRemember">
+        <label class="lform-check"><input type="checkbox" id="rememberMe"> Remember me</label>
+        <a href="#" class="lform-link" id="forgotLink" onclick="showForgot();return false">Forgot password?</a>
+      </div>
+
+      <!-- Submit -->
+      <button class="login-submit" id="loginSubmitBtn" onclick="handleAuth()">Sign In</button>
+
+      <div class="login-divider">or continue with</div>
+
+      <div class="social-btns">
+        <button class="social-btn" onclick="socialLogin('Google')">
+          <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Google
+        </button>
+        <button class="social-btn" onclick="socialLogin('Apple')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.7 9.05 7.4c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.56-1.32 3.1-2.54 4zm-3.03-17.6c.06 2.16-1.87 3.95-3.98 3.75-.28-2.02 1.82-3.9 3.98-3.75z"/></svg>
+          Apple
+        </button>
+      </div>
+
+      <div class="login-footer-note" id="authFooterNote">
+        Don't have an account? <a href="#" onclick="switchTab('register');return false">Create one free</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<nav>
+  <div class="logo">Cure<span>.ai</span></div>
+  <ul class="nav-links">
+    <li><a href="#home" class="active">Home</a></li>
+    <li><a href="#monitor">Monitor</a></li>
+    <li><a href="#symptoms">Symptom Check</a></li>
+    <li><a href="#diseases">Diseases</a></li>
+    <li><a href="#consult">Consult</a></li>
+    <li><a href="#hospitals">Hospitals</a></li>
+    <li><a href="#bmi">BMI</a></li>
+    <li><a href="#ai-chat" class="nav-cta">Ask AI</a></li>
+    <li><button class="settings-nav-btn" onclick="openSettings()" title="Settings">⚙️</button></li>
+  </ul>
+</nav>
+
+<!-- SETTINGS PANEL -->
+<div class="settings-overlay" id="settingsOverlay" onclick="if(event.target===this)closeSettings()">
+  <div class="settings-panel" id="settingsPanel">
+    <div class="settings-header">
+      <div class="settings-title-row">
+        <span class="settings-icon">⚙️</span>
+        <span class="settings-title" data-i18n="settings">Settings</span>
+      </div>
+      <button class="settings-close" onclick="closeSettings()">✕</button>
+    </div>
+
+    <!-- Language -->
+    <div class="settings-section">
+      <div class="settings-section-label" data-i18n="language">🌐 Language</div>
+      <div class="lang-options">
+        <button class="lang-btn active" id="langEN" onclick="setLanguage('en')">
+          <span class="lang-flag">🇮🇳</span>
+          <div><div class="lang-name">English</div><div class="lang-native">English</div></div>
+          <span class="lang-check" id="checkEN">✓</span>
+        </button>
+        <button class="lang-btn" id="langTA" onclick="setLanguage('ta')">
+          <span class="lang-flag">🏛️</span>
+          <div><div class="lang-name">Tamil</div><div class="lang-native">தமிழ்</div></div>
+          <span class="lang-check" id="checkTA" style="opacity:0">✓</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Region -->
+    <div class="settings-section">
+      <div class="settings-section-label" data-i18n="region">📍 Region</div>
+      <div class="region-options">
+        <button class="region-btn" id="regionTN" onclick="setRegion('TN')">
+          <span>🏛️</span><div><div class="region-name">Tamil Nadu</div><div class="region-sub">தமிழ்நாடு</div></div>
+          <span class="lang-check" id="checkTN" style="opacity:0">✓</span>
+        </button>
+        <button class="region-btn" id="regionMH" onclick="setRegion('MH')">
+          <span>🏙️</span><div><div class="region-name">Maharashtra</div><div class="region-sub">Mumbai, Pune</div></div>
+          <span class="lang-check" id="checkMH" style="opacity:0">✓</span>
+        </button>
+        <button class="region-btn" id="regionKA" onclick="setRegion('KA')">
+          <span>🌿</span><div><div class="region-name">Karnataka</div><div class="region-sub">Bengaluru, Mysuru</div></div>
+          <span class="lang-check" id="checkKA" style="opacity:0">✓</span>
+        </button>
+        <button class="region-btn" id="regionKE" onclick="setRegion('KE')">
+          <span>🌴</span><div><div class="region-name">Kerala</div><div class="region-sub">Kochi, Thiruvananthapuram</div></div>
+          <span class="lang-check" id="checkKE" style="opacity:0">✓</span>
+        </button>
+        <button class="region-btn" id="regionDL" onclick="setRegion('DL')">
+          <span>🏛️</span><div><div class="region-name">Delhi NCR</div><div class="region-sub">New Delhi, Noida</div></div>
+          <span class="lang-check" id="checkDL" style="opacity:0">✓</span>
+        </button>
+        <button class="region-btn" id="regionTG" onclick="setRegion('TG')">
+          <span>💎</span><div><div class="region-name">Telangana</div><div class="region-sub">Hyderabad</div></div>
+          <span class="lang-check" id="checkTG" style="opacity:0">✓</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Emergency Numbers -->
+    <div class="settings-section">
+      <div class="settings-section-label">🚨 <span data-i18n="emergency_numbers">Indian Emergency Numbers</span></div>
+      <div class="emergency-grid" id="emergencyGrid"></div>
+    </div>
+
+    <div class="settings-footer" data-i18n="settings_footer">Settings are saved automatically</div>
+  </div>
+</div>
+
+<!-- HERO -->
+<section id="home">
+  <div class="hero-inner">
+    <div class="fade-up">
+      <div class="hero-badge"><span></span>AI-Powered Healthcare</div>
+      <h1>Your Smart<br><span class="accent">Health</span> Assistant</h1>
+      <p class="hero-sub">Cure.ai combines artificial intelligence with medical expertise to monitor your health, analyse symptoms, connect you with doctors, and guide you toward a healthier life.</p>
+      <div class="hero-btns">
+        <a href="#symptoms" class="btn-primary">Check Symptoms</a>
+        <a href="#consult" class="btn-outline">Talk to a Doctor</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><div class="stat-num">10K+</div><div class="stat-label">Diseases tracked</div></div>
+        <div class="stat"><div class="stat-num">500+</div><div class="stat-label">Doctors online</div></div>
+        <div class="stat"><div class="stat-num">98%</div><div class="stat-label">AI accuracy</div></div>
+      </div>
+    </div>
+    <div class="hero-visual fade-up delay-2">
+      <div class="hero-card">
+        <div class="vitals-grid">
+          <div class="vital"><div class="vital-val">72 <small style="font-size:.9rem">bpm</small></div><div class="vital-label">❤️ Heart Rate</div></div>
+          <div class="vital"><div class="vital-val">120/80</div><div class="vital-label">🩸 Blood Pressure</div></div>
+          <div class="vital"><div class="vital-val">98.6°</div><div class="vital-label">🌡️ Temperature</div></div>
+          <div class="vital"><div class="vital-val">98%</div><div class="vital-label">💨 SpO2</div></div>
+        </div>
+        <div class="ai-chat">
+          <div class="chat-msg">
+            <div class="chat-avatar">U</div>
+            <div class="chat-bubble">I have a headache and mild fever</div>
+          </div>
+          <div class="chat-msg">
+            <div class="chat-avatar" style="background:var(--mint-dark)">AI</div>
+            <div class="chat-bubble ai">Based on your symptoms, this may be a viral infection. I recommend rest and hydration. Shall I find nearby doctors?</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section style="background:var(--navy2);padding:60px 2rem">
+  <div class="section-inner">
+    <div class="section-label">Everything you need</div>
+    <div class="section-title">Complete Health Platform</div>
+    <div class="features-grid">
+      <a href="#monitor" class="feature-card"><div class="feature-icon">📊</div><div class="feature-title">Health Monitoring</div><div class="feature-desc">Track vitals, log health data, and get AI insights on trends in real time.</div></a>
+      <a href="#symptoms" class="feature-card"><div class="feature-icon">🔍</div><div class="feature-title">Symptom Analyser</div><div class="feature-desc">Select symptoms from categorised tables. AI cross-references 10,000+ conditions.</div></a>
+      <a href="#diseases" class="feature-card"><div class="feature-icon">📖</div><div class="feature-title">Disease Database</div><div class="feature-desc">In-depth encyclopaedia of diseases: causes, symptoms, treatments, prevention.</div></a>
+      <a href="#consult" class="feature-card"><div class="feature-icon">👨‍⚕️</div><div class="feature-title">Doctor Consulting</div><div class="feature-desc">Book instant video or chat consultations with certified specialists.</div></a>
+      <a href="#hospitals" class="feature-card"><div class="feature-icon">🏥</div><div class="feature-title">Nearby Hospitals</div><div class="feature-desc">Live map of hospitals, clinics, and pharmacies near your location.</div></a>
+      <a href="#bmi" class="feature-card"><div class="feature-icon">⚖️</div><div class="feature-title">BMI Calculator</div><div class="feature-desc">Calculate your Body Mass Index and get personalised nutrition guidance.</div></a>
+    </div>
+  </div>
+</section>
+
+<!-- HEALTH MONITOR -->
+<section id="monitor">
+  <div class="section-inner">
+    <div class="section-label">Real-time tracking</div>
+    <div class="section-title">Health Monitoring</div>
+    <div class="section-sub">Log your daily vitals. Our AI tracks trends and alerts you to any concerning changes.</div>
+    <div class="monitor-grid">
+      <div class="monitor-card">
+        <div class="monitor-header">
+          <div class="monitor-title">Today's Vitals</div>
+          <div class="status-dot"></div>
+        </div>
+        <div class="vitals-list">
+          <div class="vital-row">
+            <div class="vital-name">❤️ Heart Rate</div>
+            <div>
+              <div class="vital-value good" id="hrDisplay">72 bpm</div>
+              <div class="progress-bar"><div class="progress-fill fill-good" style="width:60%"></div></div>
+            </div>
+          </div>
+          <div class="vital-row">
+            <div class="vital-name">🩸 Blood Pressure</div>
+            <div><div class="vital-value good" id="bpDisplay">120/80 mmHg</div>
+            <div class="progress-bar"><div class="progress-fill fill-good" style="width:70%"></div></div></div>
+          </div>
+          <div class="vital-row">
+            <div class="vital-name">🌡️ Temperature</div>
+            <div><div class="vital-value good" id="tempDisplay">98.6 °F</div>
+            <div class="progress-bar"><div class="progress-fill fill-good" style="width:55%"></div></div></div>
+          </div>
+          <div class="vital-row">
+            <div class="vital-name">💨 Oxygen (SpO2)</div>
+            <div><div class="vital-value good" id="spo2Display">98%</div>
+            <div class="progress-bar"><div class="progress-fill fill-good" style="width:90%"></div></div></div>
+          </div>
+          <div class="vital-row">
+            <div class="vital-name">⚖️ Weight</div>
+            <div><div class="vital-value warn" id="weightDisplay">78 kg</div>
+            <div class="progress-bar"><div class="progress-fill fill-warn" style="width:65%"></div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="monitor-card">
+        <div class="monitor-header"><div class="monitor-title">Log New Reading</div></div>
+        <div class="form-group">
+          <label class="form-label">Heart Rate (bpm)</label>
+          <div class="input-row"><input class="mini-input" id="hrIn" type="number" placeholder="e.g. 72"><button class="mini-btn" onclick="logVital('hr')">Log</button></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Blood Pressure (systolic)</label>
+          <div class="input-row"><input class="mini-input" id="bpIn" type="number" placeholder="e.g. 120"><button class="mini-btn" onclick="logVital('bp')">Log</button></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Temperature (°F)</label>
+          <div class="input-row"><input class="mini-input" id="tempIn" type="number" step="0.1" placeholder="e.g. 98.6"><button class="mini-btn" onclick="logVital('temp')">Log</button></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Weight (kg)</label>
+          <div class="input-row"><input class="mini-input" id="weightIn" type="number" step="0.1" placeholder="e.g. 70"><button class="mini-btn" onclick="logVital('weight')">Log</button></div>
+        </div>
+        <div id="vitalFeedback" style="font-size:.82rem;color:var(--mint);min-height:1.2em;margin-top:.5rem"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SYMPTOM CHECKER -->
+<section id="symptoms">
+  <div class="section-inner">
+    <div class="section-label">AI Diagnosis</div>
+    <div class="section-title">Symptom Analyser</div>
+    <div class="section-sub">Select your symptoms from the categorised table. Our AI will analyse and suggest possible conditions.</div>
+    <div class="symptom-section">
+      <div class="symptom-picker">
+        <div class="category-tabs" id="catTabs"></div>
+        <div class="symptoms-grid" id="symptomsGrid"></div>
+        <div class="selected-area">
+          <div class="selected-label">Selected symptoms: <span id="selCount">0</span></div>
+          <div class="selected-chips" id="selectedChips"></div>
+        </div>
+        <button class="analyze-btn" onclick="analyzeSymptoms()">🔬 Analyse with AI</button>
+      </div>
+      <div class="ai-result">
+        <div class="result-title">AI Analysis Results</div>
+        <div id="analysisResult">
+          <div class="result-placeholder"><div class="icon">🧬</div><p>Select symptoms and click Analyse to get AI-powered condition suggestions.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DISEASE DATABASE -->
+<section id="diseases">
+  <div class="section-inner">
+    <div class="section-label">Medical encyclopedia</div>
+    <div class="section-title">Disease Database</div>
+    <div class="section-sub">Explore our comprehensive database of diseases, conditions, and treatments.</div>
+    <div class="disease-db">
+      <div class="db-search">
+        <input class="db-input" id="diseaseSearch" placeholder="Search diseases, conditions, symptoms..." oninput="filterDiseases()">
+        <button class="db-search-btn">Search</button>
+      </div>
+      <div class="disease-cats" id="diseaseCatFilter"></div>
+      <div class="disease-cards" id="diseaseCards"></div>
+    </div>
+  </div>
+</section>
+
+<!-- DISEASE MODAL -->
+<div class="modal-overlay" id="diseaseModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<!-- DOCTOR CONSULT -->
+<section id="consult">
+  <div class="section-inner">
+    <div class="section-label">Expert care</div>
+    <div class="section-title">Doctor Consulting</div>
+    <div class="section-sub">Connect with certified specialists for instant video or chat consultations.</div>
+    <div class="doctors-grid">
+      <div class="doctor-card">
+        <div class="doc-avatar">👨‍⚕️</div>
+        <div class="doc-name">Dr. Arjun Sharma</div>
+        <div class="doc-spec">General Physician</div>
+        <div class="doc-meta"><span>⭐ 4.9</span><span>👥 1,200+ patients</span></div>
+        <div class="availability"><div class="avail-dot online"></div>Available now</div>
+        <button class="book-btn" onclick="bookDoctor('Dr. Arjun Sharma')">Book Consultation</button>
+      </div>
+      <div class="doctor-card">
+        <div class="doc-avatar">👩‍⚕️</div>
+        <div class="doc-name">Dr. Priya Nair</div>
+        <div class="doc-spec">Cardiologist</div>
+        <div class="doc-meta"><span>⭐ 4.8</span><span>👥 890+ patients</span></div>
+        <div class="availability"><div class="avail-dot online"></div>Available now</div>
+        <button class="book-btn" onclick="bookDoctor('Dr. Priya Nair')">Book Consultation</button>
+      </div>
+      <div class="doctor-card">
+        <div class="doc-avatar">👨‍⚕️</div>
+        <div class="doc-name">Dr. Ramesh Kumar</div>
+        <div class="doc-spec">Neurologist</div>
+        <div class="doc-meta"><span>⭐ 4.9</span><span>👥 2,100+ patients</span></div>
+        <div class="availability"><div class="avail-dot busy"></div>Next slot: 2 PM</div>
+        <button class="book-btn" onclick="bookDoctor('Dr. Ramesh Kumar')">Book Consultation</button>
+      </div>
+      <div class="doctor-card">
+        <div class="doc-avatar">👩‍⚕️</div>
+        <div class="doc-name">Dr. Lakshmi Devi</div>
+        <div class="doc-spec">Dermatologist</div>
+        <div class="doc-meta"><span>⭐ 4.7</span><span>👥 760+ patients</span></div>
+        <div class="availability"><div class="avail-dot online"></div>Available now</div>
+        <button class="book-btn" onclick="bookDoctor('Dr. Lakshmi Devi')">Book Consultation</button>
+      </div>
+      <div class="doctor-card">
+        <div class="doc-avatar">👨‍⚕️</div>
+        <div class="doc-name">Dr. Suresh Patel</div>
+        <div class="doc-spec">Orthopaedic Surgeon</div>
+        <div class="doc-meta"><span>⭐ 4.8</span><span>👥 1,450+ patients</span></div>
+        <div class="availability"><div class="avail-dot online"></div>Available now</div>
+        <button class="book-btn" onclick="bookDoctor('Dr. Suresh Patel')">Book Consultation</button>
+      </div>
+      <div class="doctor-card">
+        <div class="doc-avatar">👩‍⚕️</div>
+        <div class="doc-name">Dr. Meena Iyer</div>
+        <div class="doc-spec">Paediatrician</div>
+        <div class="doc-meta"><span>⭐ 5.0</span><span>👥 3,200+ patients</span></div>
+        <div class="availability"><div class="avail-dot busy"></div>Next slot: 4 PM</div>
+        <button class="book-btn" onclick="bookDoctor('Dr. Meena Iyer')">Book Consultation</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOSPITAL MAP -->
+<section id="hospitals">
+  <div class="section-inner">
+    <div class="section-label">Find care near you</div>
+    <div class="section-title">Nearby Hospitals</div>
+    <div class="section-sub">Live map of hospitals, clinics, and pharmacies near your current location.</div>
+    <div class="map-controls">
+      <button class="map-btn active" onclick="filterMap('all',this)">All</button>
+      <button class="map-btn" onclick="filterMap('hospital',this)">🏥 Hospitals</button>
+      <button class="map-btn" onclick="filterMap('clinic',this)">🏨 Clinics</button>
+      <button class="map-btn" onclick="filterMap('pharmacy',this)">💊 Pharmacies</button>
+      <button class="map-btn" onclick="locateMe()">📍 My Location</button>
+    </div>
+    <div class="map-wrapper"><div id="map"></div></div>
+  </div>
+</section>
+
+<!-- BMI CALCULATOR -->
+<section id="bmi">
+  <div class="section-inner">
+    <div class="section-label">Body metrics</div>
+    <div class="section-title">BMI Calculator</div>
+    <div class="section-sub">Calculate your Body Mass Index and understand what it means for your health.</div>
+    <div class="bmi-grid">
+      <div class="bmi-form">
+        <div class="unit-toggle">
+          <button class="unit-btn active" id="metricBtn" onclick="setUnit('metric')">Metric (kg/cm)</button>
+          <button class="unit-btn" id="imperialBtn" onclick="setUnit('imperial')">Imperial (lb/in)</button>
+        </div>
+        <div class="form-group"><label class="form-label" id="weightLabel">Weight (kg)</label><input class="form-input" id="bmiWeight" type="number" placeholder="e.g. 70"></div>
+        <div class="form-group"><label class="form-label" id="heightLabel">Height (cm)</label><input class="form-input" id="bmiHeight" type="number" placeholder="e.g. 170"></div>
+        <div class="form-group"><label class="form-label">Age</label><input class="form-input" id="bmiAge" type="number" placeholder="e.g. 25"></div>
+        <div class="form-group">
+          <label class="form-label">Gender</label>
+          <select class="form-input" id="bmiGender"><option value="male">Male</option><option value="female">Female</option></select>
+        </div>
+        <button class="calc-btn" onclick="calculateBMI()">Calculate BMI</button>
+      </div>
+      <div class="bmi-result" id="bmiResult">
+        <div style="text-align:center;color:var(--muted)">
+          <div style="font-size:3rem;margin-bottom:.5rem">⚖️</div>
+          <p>Enter your details and click Calculate</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- AI CHAT -->
+<section id="ai-chat">
+  <div class="section-inner">
+    <div class="section-label">Powered by AI</div>
+    <div class="section-title">Ask Cure.ai</div>
+    <div class="section-sub">Chat with our AI health assistant for personalised guidance, medication info, and general wellness advice.</div>
+    <div class="chat-container">
+      <div class="chat-main">
+        <div class="chat-head">
+          <div class="ai-avatar">C</div>
+          <div><div class="chat-name">Cure.ai Assistant</div><div class="chat-status"><span style="width:6px;height:6px;background:var(--mint);border-radius:50%;display:inline-block;animation:pulse 2s infinite"></span>Online &amp; Ready</div></div>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+          <div class="msg ai">👋 Hello! I'm your Cure.ai health assistant. I can help you understand symptoms, answer health questions, explain medications, and guide you toward the right care. How can I help you today?</div>
+        </div>
+        <div class="chat-input-area">
+          <textarea class="chat-input" id="chatInput" placeholder="Ask about symptoms, medications, diet, exercise..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}"></textarea>
+          <button class="send-btn" onclick="sendChat()">➤</button>
+        </div>
+      </div>
+      <div class="chat-sidebar">
+        <div class="quick-card">
+          <div class="quick-title">Quick Questions</div>
+          <div class="quick-chips">
+            <button class="quick-chip" onclick="askQuick('What are signs of diabetes?')">Signs of diabetes?</button>
+            <button class="quick-chip" onclick="askQuick('How to lower blood pressure naturally?')">Lower blood pressure</button>
+            <button class="quick-chip" onclick="askQuick('Best foods for heart health?')">Heart-healthy foods</button>
+            <button class="quick-chip" onclick="askQuick('How much water should I drink daily?')">Daily water intake</button>
+            <button class="quick-chip" onclick="askQuick('What are COVID-19 symptoms?')">COVID-19 symptoms</button>
+            <button class="quick-chip" onclick="askQuick('How to improve sleep quality?')">Better sleep tips</button>
+          </div>
+        </div>
+        <div class="quick-card" style="background:rgba(255,77,109,0.05);border-color:rgba(255,77,109,0.2)">
+          <div class="quick-title" style="color:var(--danger)">⚠️ Emergency?</div>
+          <p style="font-size:.8rem;color:var(--muted);margin-bottom:.75rem">Chest pain, difficulty breathing, or sudden numbness?</p>
+          <button style="width:100%;background:var(--danger);color:white;border:none;padding:.65rem;border-radius:10px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif" onclick="alert('Calling Emergency Services: 108')">📞 Call 108 Now</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <span class="logo">Cure<span>.ai</span></span>
+      <p class="footer-tagline">AI-powered health assistance for everyone. Monitor, analyse, and take control of your well-being.</p>
+    </div>
+    <div class="footer-col"><h4>Features</h4><ul><li><a href="#monitor">Health Monitor</a></li><li><a href="#symptoms">Symptom Check</a></li><li><a href="#diseases">Disease DB</a></li><li><a href="#bmi">BMI Calculator</a></li></ul></div>
+    <div class="footer-col"><h4>Care</h4><ul><li><a href="#consult">Find Doctors</a></li><li><a href="#hospitals">Hospitals</a></li><li><a href="#ai-chat">AI Assistant</a></li></ul></div>
+    <div class="footer-col"><h4>Info</h4><ul><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Use</a></li><li><a href="#">Medical Disclaimer</a></li></ul></div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-note">© 2026 Cure.ai — For informational purposes only. Always consult a qualified healthcare professional.</div>
+    <div class="footer-note">Made with ❤️ for better health</div>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+// ===== SYMPTOM DATA =====
+const symptomData = {
+  "General": ["Fever","Fatigue","Weakness","Weight loss","Night sweats","Chills","Loss of appetite","Swollen lymph nodes","Dehydration","Dizziness"],
+  "Head & Neuro": ["Headache","Migraine","Confusion","Memory loss","Numbness","Tremors","Seizures","Blurred vision","Fainting","Neck stiffness"],
+  "Respiratory": ["Cough","Shortness of breath","Wheezing","Chest tightness","Sore throat","Runny nose","Nasal congestion","Sneezing","Hoarseness","Coughing blood"],
+  "Digestive": ["Nausea","Vomiting","Diarrhoea","Constipation","Abdominal pain","Bloating","Heartburn","Blood in stool","Loss of appetite","Jaundice"],
+  "Skin": ["Rash","Itching","Hives","Blisters","Dry skin","Bruising","Yellowing skin","Pale skin","Hair loss","Nail changes"],
+  "Musculoskeletal": ["Joint pain","Muscle pain","Back pain","Stiffness","Swelling","Muscle weakness","Cramps","Bone pain","Limited mobility","Tenderness"],
+  "Cardiovascular": ["Chest pain","Palpitations","Irregular heartbeat","Leg swelling","Shortness of breath","High blood pressure","Cold extremities","Dizziness","Fatigue","Fainting"],
+  "Mental Health": ["Anxiety","Depression","Mood swings","Insomnia","Irritability","Difficulty concentrating","Panic attacks","Hallucinations","Social withdrawal","Fatigue"]
+};
+
+const symptomDiseaseMap = {
+  "Fever,Cough,Sore throat": {name:"Influenza (Flu)", match:92, description:"A viral respiratory illness caused by influenza viruses.", urgency:"moderate"},
+  "Fever,Headache,Neck stiffness": {name:"Meningitis", match:87, description:"Inflammation of membranes surrounding the brain and spinal cord.", urgency:"high"},
+  "Chest pain,Shortness of breath,Palpitations": {name:"Cardiac Arrhythmia", match:84, description:"Abnormal heart rhythm that may cause chest discomfort.", urgency:"high"},
+  "Fatigue,Weight loss,Night sweats": {name:"Lymphoma", match:78, description:"Cancer of the lymphatic system. Requires immediate evaluation.", urgency:"high"},
+  "Nausea,Abdominal pain,Diarrhoea": {name:"Gastroenteritis", match:91, description:"Inflammation of the stomach and intestines, often viral.", urgency:"low"},
+  "Headache,Blurred vision,Dizziness": {name:"Hypertension", match:82, description:"High blood pressure that can cause neurological symptoms.", urgency:"moderate"},
+  "Joint pain,Stiffness,Swelling": {name:"Rheumatoid Arthritis", match:88, description:"Autoimmune disease causing joint inflammation.", urgency:"moderate"},
+  "Rash,Itching,Fever": {name:"Dengue Fever", match:85, description:"Mosquito-borne viral infection common in tropical regions.", urgency:"moderate"},
+  "Cough,Shortness of breath,Wheezing": {name:"Asthma", match:90, description:"Chronic respiratory condition causing airway inflammation.", urgency:"moderate"},
+  "Anxiety,Insomnia,Fatigue": {name:"Anxiety Disorder", match:86, description:"Persistent anxiety affecting daily functioning.", urgency:"low"},
+};
+
+let selectedSymptoms = [];
+let currentCategory = "General";
+let bmiUnit = 'metric';
+let map, markers = [];
+
+// ===== INIT =====
+function initSymptomChecker() {
+  const tabs = document.getElementById('catTabs');
+  tabs.innerHTML = '';
+  const L = translations[currentLang];
+  Object.keys(symptomData).forEach((cat,i) => {
+    const btn = document.createElement('button');
+    btn.className = 'cat-tab' + (i===0?' active':'');
+    btn.textContent = (L.symptom_cats && L.symptom_cats[cat]) || cat;
+    btn.setAttribute('data-cat', cat);
+    btn.onclick = () => selectCategory(cat, btn);
+    tabs.appendChild(btn);
+  });
+  renderSymptoms(currentCategory);
+}
+
+function selectCategory(cat, btn) {
+  document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentCategory = cat;
+  renderSymptoms(cat);
+}
+
+function renderSymptoms(cat) {
+  const grid = document.getElementById('symptomsGrid');
+  grid.innerHTML = '';
+  symptomData[cat].forEach(s => {
+    const chip = document.createElement('div');
+    chip.className = 'symptom-chip' + (selectedSymptoms.includes(s)?' selected':'');
+    chip.textContent = s;
+    chip.onclick = () => toggleSymptom(s, chip);
+    grid.appendChild(chip);
+  });
+}
+
+function toggleSymptom(s, chip) {
+  if (selectedSymptoms.includes(s)) {
+    selectedSymptoms = selectedSymptoms.filter(x => x !== s);
+    chip.classList.remove('selected');
+  } else {
+    selectedSymptoms.push(s);
+    chip.classList.add('selected');
+  }
+  updateSelectedDisplay();
+}
+
+function updateSelectedDisplay() {
+  document.getElementById('selCount').textContent = selectedSymptoms.length;
+  const area = document.getElementById('selectedChips');
+  area.innerHTML = selectedSymptoms.map(s => `<div class="sel-chip">${s}<button onclick="removeSymptom('${s}')">×</button></div>`).join('');
+}
+
+function removeSymptom(s) {
+  selectedSymptoms = selectedSymptoms.filter(x => x !== s);
+  updateSelectedDisplay();
+  renderSymptoms(currentCategory);
+}
+
+function analyzeSymptoms() {
+  if (selectedSymptoms.length < 2) { alert('Please select at least 2 symptoms for analysis.'); return; }
+  const resultDiv = document.getElementById('analysisResult');
+  resultDiv.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--mint)">' + (translations[currentLang].sym_analysing||'🔬 Analysing symptoms...') + '</div>';
+  setTimeout(() => {
+    let results = [];
+    Object.entries(symptomDiseaseMap).forEach(([key, val]) => {
+      const keySymptoms = key.split(',');
+      const matchCount = keySymptoms.filter(s => selectedSymptoms.includes(s)).length;
+      if (matchCount > 0) {
+        const score = Math.round((matchCount / keySymptoms.length) * val.match);
+        results.push({...val, match: score});
+      }
+    });
+    if (results.length === 0) {
+      results = [{name:"Common Cold / Viral Infection", match:72, description:"Most common cause of multiple mild symptoms.", urgency:"low"}];
+    }
+    results.sort((a,b) => b.match - a.match);
+    const urgencyColor = {high:'var(--danger)',moderate:'var(--warn)',low:'var(--mint)'};
+    resultDiv.innerHTML = results.slice(0,3).map(r => `
+      <div class="disease-result">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="disease-name">${r.name}</div>
+          <span style="font-size:.72rem;background:${urgencyColor[r.urgency]};color:var(--navy);padding:.2rem .6rem;border-radius:6px;font-weight:700">${r.urgency.toUpperCase()}</span>
+        </div>
+        <div class="disease-match">${r.match}% match</div>
+        <div class="match-bar"><div class="match-fill" style="width:${r.match}%"></div></div>
+        <div style="font-size:.78rem;color:var(--muted);margin-top:.5rem">${r.description}</div>
+      </div>`).join('') +
+      `<div class="result-disclaimer">${translations[currentLang].sym_disclaimer||'⚠️ This is an AI-based analysis for informational purposes only.'}</div>`;
+  }, 1200);
+}
+
+// ===== DISEASE DATABASE =====
+const diseases = [
+  {name:"Diabetes Mellitus",cat:"Metabolic",icon:"🩸",bg:"rgba(255,179,71,0.15)",desc:"Chronic condition affecting blood sugar regulation.",symptoms:["Frequent urination","Excessive thirst","Blurred vision"],treatment:"Insulin, oral medications, lifestyle changes.",prevention:"Healthy diet, exercise, weight management."},
+  {name:"Hypertension",cat:"Cardiovascular",icon:"❤️",bg:"rgba(255,77,109,0.15)",desc:"High blood pressure increasing heart disease risk.",symptoms:["Headache","Dizziness","Chest pain"],treatment:"ACE inhibitors, diuretics, lifestyle modification.",prevention:"Low-salt diet, exercise, stress reduction."},
+  {name:"Asthma",cat:"Respiratory",icon:"💨",bg:"rgba(77,166,255,0.15)",desc:"Chronic airway inflammation causing breathing difficulty.",symptoms:["Wheezing","Shortness of breath","Chest tightness"],treatment:"Inhalers, corticosteroids, bronchodilators.",prevention:"Avoid triggers, regular medication, clean air."},
+  {name:"Dengue Fever",cat:"Infectious",icon:"🦟",bg:"rgba(0,200,150,0.1)",desc:"Mosquito-borne viral fever common in tropical regions.",symptoms:["High fever","Severe headache","Rash","Joint pain"],treatment:"Supportive care, hydration, pain relief.",prevention:"Mosquito control, repellents, protective clothing."},
+  {name:"Tuberculosis",cat:"Infectious",icon:"🫁",bg:"rgba(0,200,150,0.1)",desc:"Bacterial infection primarily affecting the lungs.",symptoms:["Persistent cough","Night sweats","Weight loss"],treatment:"6-month antibiotic regimen (DOTS therapy).",prevention:"BCG vaccination, ventilation, early detection."},
+  {name:"Malaria",cat:"Infectious",icon:"🦠",bg:"rgba(0,200,150,0.1)",desc:"Parasitic disease spread by Anopheles mosquitoes.",symptoms:["Cyclical fever","Chills","Anaemia"],treatment:"Antimalarial drugs (artemisinin combination therapy).",prevention:"Mosquito nets, prophylactics, drainage of stagnant water."},
+  {name:"Arthritis",cat:"Musculoskeletal",icon:"🦴",bg:"rgba(255,179,71,0.15)",desc:"Inflammation of joints causing pain and stiffness.",symptoms:["Joint pain","Swelling","Reduced motion"],treatment:"NSAIDs, physiotherapy, DMARDs for RA.",prevention:"Weight management, exercise, joint protection."},
+  {name:"Anaemia",cat:"Haematological",icon:"💉",bg:"rgba(255,77,109,0.15)",desc:"Deficiency of red blood cells or haemoglobin.",symptoms:["Fatigue","Pale skin","Shortness of breath"],treatment:"Iron supplements, B12 injections, dietary changes.",prevention:"Balanced diet rich in iron and vitamins."},
+  {name:"Migraine",cat:"Neurological",icon:"🧠",bg:"rgba(168,109,255,0.15)",desc:"Recurring severe headaches often with nausea and light sensitivity.",symptoms:["Severe headache","Nausea","Photophobia"],treatment:"Triptans, NSAIDs, preventive medications.",prevention:"Identify triggers, regular sleep, stress management."},
+];
+
+let activeDiseaseFilter = 'All';
+
+function initDiseaseDB() {
+  const cats = ['All',...[...new Set(diseases.map(d=>d.cat))]];
+  const filterDiv = document.getElementById('diseaseCatFilter');
+  cats.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'cat-tab' + (c==='All'?' active':'');
+    btn.textContent = c;
+    btn.onclick = () => { activeDiseaseFilter=c; document.querySelectorAll('#diseaseCatFilter .cat-tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); filterDiseases(); };
+    filterDiv.appendChild(btn);
+  });
+  renderDiseases(diseases);
+}
+
+function filterDiseases() {
+  const q = document.getElementById('diseaseSearch').value.toLowerCase();
+  const filtered = diseases.filter(d => {
+    const matchCat = activeDiseaseFilter==='All'||d.cat===activeDiseaseFilter;
+    const matchQ = !q || d.name.toLowerCase().includes(q) || d.desc.toLowerCase().includes(q) || d.symptoms.some(s=>s.toLowerCase().includes(q));
+    return matchCat && matchQ;
+  });
+  renderDiseases(filtered);
+}
+
+function renderDiseases(list) {
+  document.getElementById('diseaseCards').innerHTML = list.map(d => `
+    <div class="d-card" onclick="openDiseaseModal('${d.name}')">
+      <div class="d-card-top"><div class="d-icon" style="background:${d.bg}">${d.icon}</div><div><div class="d-name">${d.name}</div><div class="d-category">${d.cat}</div></div></div>
+      <div class="d-desc">${d.desc}</div>
+      <div class="d-tags">${d.symptoms.slice(0,3).map(s=>`<span class="d-tag">${s}</span>`).join('')}</div>
+    </div>`).join('') || '<p style="color:var(--muted);grid-column:1/-1;text-align:center;padding:2rem">No diseases found.</p>';
+}
+
+function openDiseaseModal(name) {
+  const d = diseases.find(x=>x.name===name);
+  if (!d) return;
+  document.getElementById('modalContent').innerHTML = `
+    <span class="modal-badge">${d.cat}</span>
+    <h2>${d.icon} ${d.name}</h2>
+    <p>${d.desc}</p>
+    <div class="modal-section"><h3>Common Symptoms</h3><ul class="modal-list">${d.symptoms.map(s=>`<li>${s}</li>`).join('')}</ul></div>
+    <div class="modal-section"><h3>Treatment Options</h3><ul class="modal-list"><li>${d.treatment}</li></ul></div>
+    <div class="modal-section"><h3>Prevention</h3><ul class="modal-list"><li>${d.prevention}</li></ul></div>
+    <div style="background:rgba(255,77,109,0.08);border:1px solid rgba(255,77,109,0.2);border-radius:10px;padding:1rem;font-size:.82rem;color:var(--muted)">⚠️ Always consult a certified medical professional for diagnosis and treatment.</div>`;
+  document.getElementById('diseaseModal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('diseaseModal').classList.remove('open'); }
+document.getElementById('diseaseModal').onclick = e => { if(e.target===document.getElementById('diseaseModal')) closeModal(); };
+
+// ===== VITAL LOGGING =====
+function logVital(type) {
+  const feedback = document.getElementById('vitalFeedback');
+  const map2 = {hr:['hrIn','hrDisplay',' bpm'],bp:['bpIn','bpDisplay','/80 mmHg'],temp:['tempIn','tempDisplay',' °F'],weight:['weightIn','weightDisplay',' kg']};
+  const [inId, dispId, suffix] = map2[type];
+  const val = document.getElementById(inId).value;
+  if (!val) return;
+  document.getElementById(dispId).textContent = val + suffix;
+  document.getElementById(inId).value = '';
+  feedback.textContent = translations[currentLang].log_success || '✓ Logged successfully!';
+  setTimeout(()=>feedback.textContent='',2000);
+}
+
+// ===== DOCTOR BOOKING =====
+function bookDoctor(name) {
+  alert(`Booking consultation with ${name}...\n\nIn a full implementation, this would open a scheduling widget with available time slots, video call setup, and payment processing.`);
+}
+
+// ===== MAP =====
+function initMap() {
+  // Default to Srivilliputhur, Tamil Nadu
+  const defaultLat = 9.5127, defaultLng = 77.6369;
+  map = L.map('map').setView([defaultLat, defaultLng], 14);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+
+  const places = [
+    {lat:9.5127,lng:77.6369,name:"Srivilliputhur Government Hospital",type:"hospital",info:"24/7 Emergency • General Medicine"},
+    {lat:9.5185,lng:77.6420,name:"Meenakshi Clinic",type:"clinic",info:"General Practice • Mon-Sat 9AM-6PM"},
+    {lat:9.5070,lng:77.6310,name:"Apollo Pharmacy",type:"pharmacy",info:"Open 24 hours • Home delivery"},
+    {lat:9.5200,lng:77.6350,name:"City Health Centre",type:"clinic",info:"Primary Care • Vaccinations"},
+    {lat:9.5090,lng:77.6450,name:"Sri Kumaran Hospital",type:"hospital",info:"Multi-specialty • Emergency Care"},
+    {lat:9.5150,lng:77.6280,name:"MedPlus Pharmacy",type:"pharmacy",info:"Open 8AM-10PM • Prescription"},
+  ];
+
+  const icons = {
+    hospital: L.divIcon({html:'<div style="background:#ff4d6d;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3)">🏥</div>',iconSize:[32,32],iconAnchor:[16,16],className:''}),
+    clinic: L.divIcon({html:'<div style="background:#4da6ff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3)">🏨</div>',iconSize:[32,32],iconAnchor:[16,16],className:''}),
+    pharmacy: L.divIcon({html:'<div style="background:#00C896;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3)">💊</div>',iconSize:[32,32],iconAnchor:[16,16],className:''}),
+  };
+
+  places.forEach(p => {
+    const m = L.marker([p.lat,p.lng],{icon:icons[p.type]}).addTo(map);
+    m._type = p.type;
+    m.bindPopup(`<b>${p.name}</b><br><small>${p.info}</small><br><a href="https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}" target="_blank" style="color:#00C896">Get Directions ↗</a>`);
+    markers.push(m);
+  });
+
+  // Add user marker
+  L.circleMarker([defaultLat, defaultLng], {radius:10,fillColor:'#00C896',fillOpacity:0.7,color:'#fff',weight:3}).addTo(map).bindPopup('📍 You are here');
+}
+
+function filterMap(type, btn) {
+  document.querySelectorAll('.map-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  markers.forEach(m => {
+    if (type==='all'||m._type===type) { map.addLayer(m); } else { map.removeLayer(m); }
+  });
+}
+
+function locateMe() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(pos => {
+      map.setView([pos.coords.latitude, pos.coords.longitude], 15);
+    }, () => alert('Location access denied.'));
+  }
+}
+
+// ===== BMI =====
+function setUnit(unit) {
+  bmiUnit = unit;
+  document.getElementById('metricBtn').classList.toggle('active', unit==='metric');
+  document.getElementById('imperialBtn').classList.toggle('active', unit==='imperial');
+  document.getElementById('weightLabel').textContent = unit==='metric'?'Weight (kg)':'Weight (lbs)';
+  document.getElementById('heightLabel').textContent = unit==='metric'?'Height (cm)':'Height (inches)';
+}
+
+function calculateBMI() {
+  let w = parseFloat(document.getElementById('bmiWeight').value);
+  let h = parseFloat(document.getElementById('bmiHeight').value);
+  if (!w||!h) { alert('Please enter weight and height.'); return; }
+  if (bmiUnit==='imperial') { w=w*0.453592; h=h*2.54; }
+  const bmi = w / ((h/100)**2);
+  const bmiRound = Math.round(bmi*10)/10;
+  let label='', color='', tips='', markerPct=0;
+  const L = translations[currentLang];
+  if (bmi<18.5) { label=L.bmi_under||'Underweight'; color='var(--info)'; tips='Consider increasing caloric intake with nutrient-dense foods. Consult a nutritionist.'; markerPct=10; }
+  else if (bmi<25) { label=L.bmi_normal||'Normal weight'; color='var(--mint)'; tips='Great! Maintain your weight with balanced diet and regular exercise.'; markerPct=35; }
+  else if (bmi<30) { label=L.bmi_over||'Overweight'; color='var(--warn)'; tips='Consider moderate caloric reduction and increasing physical activity to 150 min/week.'; markerPct=62; }
+  else { label=L.bmi_obese||'Obese'; color='var(--danger)'; tips='Please consult a doctor. A structured weight loss programme with medical supervision is recommended.'; markerPct=88; }
+  document.getElementById('bmiResult').innerHTML = `
+    <div class="bmi-num" style="color:${color}">${bmiRound}</div>
+    <div class="bmi-label" style="color:${color}">${label}</div>
+    <div class="bmi-scale">
+      <div class="scale-bar"><div class="scale-marker" style="left:${markerPct}%"></div></div>
+      <div class="scale-labels"><span>${L.scale_under||'Underweight'}</span><span>${L.scale_normal||'Normal'}</span><span>${L.scale_over||'Overweight'}</span><span>${L.scale_obese||'Obese'}</span></div>
+    </div>
+    <div class="bmi-tips">${tips}</div>`;
+}
+
+// ===== AI CHAT =====
+const aiResponses = {
+  "diabetes": "Diabetes is a chronic condition where the body cannot properly regulate blood sugar. Key signs include frequent urination, excessive thirst, unexplained weight loss, and blurred vision. Type 1 requires insulin therapy; Type 2 can often be managed with lifestyle changes and oral medication. Regular HbA1c tests are essential for monitoring.",
+  "blood pressure": "To lower blood pressure naturally: reduce sodium intake to less than 2,300mg/day, exercise 30 minutes most days, maintain a healthy weight, limit alcohol, quit smoking, manage stress through meditation or yoga, and eat a DASH diet rich in fruits, vegetables, and whole grains. Monitor regularly.",
+  "heart": "Heart-healthy foods include: fatty fish (salmon, mackerel) for omega-3s, olive oil, nuts and seeds, whole grains, legumes, leafy greens, berries, and avocado. Limit saturated fats, trans fats, processed meats, and high-sodium foods. The Mediterranean diet has strong evidence for cardiovascular protection.",
+  "water": "General recommendation is 8 glasses (2 litres) per day, but needs vary. Men typically need about 3.7L and women 2.7L total daily fluids from all sources. Increase intake during exercise, hot weather, illness, or pregnancy. Your urine should be pale yellow — a good hydration indicator.",
+  "covid": "COVID-19 symptoms include fever, dry cough, fatigue, loss of taste/smell, sore throat, headache, muscle aches, and shortness of breath. Severe cases may cause difficulty breathing. If you have symptoms, isolate and get tested. Seek emergency care for chest pain, confusion, or inability to breathe.",
+  "sleep": "To improve sleep quality: maintain consistent sleep/wake times even on weekends, keep bedroom cool and dark, avoid screens 1 hour before bed (blue light suppresses melatonin), limit caffeine after 2PM, avoid alcohol near bedtime, exercise regularly but not too close to sleep, and try relaxation techniques like deep breathing.",
+  "default": "Thank you for your question! I'm here to provide general health information and guidance. For personalised medical advice, diagnosis, or treatment, please consult a qualified healthcare professional. You can also use our symptom checker tool or book a consultation with one of our doctors above."
+};
+
+function sendChat() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+  addMessage(msg, 'user');
+  input.value = '';
+  setTimeout(() => {
+    const lower = msg.toLowerCase();
+    let response = aiResponses.default;
+    for (const [key, val] of Object.entries(aiResponses)) {
+      if (lower.includes(key)) { response = val; break; }
+    }
+    addMessage(response, 'ai');
+  }, 800);
+}
+
+function addMessage(text, type) {
+  const msgs = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'msg ' + type;
+  div.textContent = (type==='ai'?'🤖 ':'')+text;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function askQuick(q) {
+  document.getElementById('chatInput').value = q;
+  sendChat();
+}
+
+// ===== SETTINGS =====
+let currentLang = 'en';
+let currentRegion = 'TN';
+
+const translations = {
+  en: {
+    settings: "Settings",
+    language: "🌐 Language",
+    region: "📍 Region",
+    emergency_numbers: "Indian Emergency Numbers",
+    settings_footer: "Settings are saved automatically",
+    nav_home: "Home", nav_monitor: "Monitor", nav_symptoms: "Symptom Check",
+    nav_diseases: "Diseases", nav_consult: "Consult", nav_hospitals: "Hospitals",
+    nav_bmi: "BMI", nav_ask: "Ask AI",
+    hero_badge: "AI-Powered Healthcare",
+    hero_title: "Your Smart <span class='accent'>Health</span> Assistant",
+    hero_sub: "Cure.ai combines artificial intelligence with medical expertise to monitor your health, analyse symptoms, connect you with doctors, and guide you toward a healthier life.",
+    hero_btn1: "Check Symptoms", hero_btn2: "Talk to a Doctor",
+    stat1_label: "Diseases tracked", stat2_label: "Doctors online", stat3_label: "AI accuracy",
+    feat_label: "Everything you need", feat_title: "Complete Health Platform",
+    feat1_title: "Health Monitoring", feat1_desc: "Track vitals, log health data, and get AI insights on trends in real time.",
+    feat2_title: "Symptom Analyser", feat2_desc: "Select symptoms from categorised tables. AI cross-references 10,000+ conditions.",
+    feat3_title: "Disease Database", feat3_desc: "In-depth encyclopaedia of diseases: causes, symptoms, treatments, prevention.",
+    feat4_title: "Doctor Consulting", feat4_desc: "Book instant video or chat consultations with certified specialists.",
+    feat5_title: "Nearby Hospitals", feat5_desc: "Live map of hospitals, clinics, and pharmacies near your location.",
+    feat6_title: "BMI Calculator", feat6_desc: "Calculate your Body Mass Index and get personalised nutrition guidance.",
+    monitor_label: "Real-time tracking", monitor_title: "Health Monitoring",
+    monitor_sub: "Log your daily vitals. Our AI tracks trends and alerts you to any concerning changes.",
+    monitor_today: "Today's Vitals", monitor_log: "Log New Reading",
+    vital_hr: "❤️ Heart Rate", vital_bp: "🩸 Blood Pressure", vital_temp: "🌡️ Temperature",
+    vital_spo2: "💨 Oxygen (SpO2)", vital_weight: "⚖️ Weight",
+    label_hr: "Heart Rate (bpm)", label_bp: "Blood Pressure (systolic)",
+    label_temp: "Temperature (°F)", label_weight: "Weight (kg)",
+    log_btn: "Log", log_success: "✓ Logged successfully!",
+    sym_label: "AI Diagnosis", sym_title: "Symptom Analyser",
+    sym_sub: "Select your symptoms from the categorised table. Our AI will analyse and suggest possible conditions.",
+    sym_selected: "Selected symptoms:", sym_analyze: "🔬 Analyse with AI",
+    sym_result_title: "AI Analysis Results",
+    sym_placeholder: "Select symptoms and click Analyse to get AI-powered condition suggestions.",
+    sym_analysing: "🔬 Analysing symptoms...",
+    sym_disclaimer: "⚠️ This is an AI-based analysis for informational purposes only. It is NOT a medical diagnosis. Please consult a qualified doctor for proper evaluation and treatment.",
+    db_label: "Medical encyclopedia", db_title: "Disease Database",
+    db_sub: "Explore our comprehensive database of diseases, conditions, and treatments.",
+    db_placeholder: "Search diseases, conditions, symptoms...", db_btn: "Search",
+    consult_label: "Expert care", consult_title: "Doctor Consulting",
+    consult_sub: "Connect with certified specialists for instant video or chat consultations.",
+    avail_now: "Available now", book_btn: "Book Consultation",
+    hosp_label: "Find care near you", hosp_title: "Nearby Hospitals",
+    hosp_sub: "Live map of hospitals, clinics, and pharmacies near your current location.",
+    map_all: "All", map_hosp: "🏥 Hospitals", map_clinic: "🏨 Clinics",
+    map_pharma: "💊 Pharmacies", map_locate: "📍 My Location",
+    bmi_label: "Body metrics", bmi_title: "BMI Calculator",
+    bmi_sub: "Calculate your Body Mass Index and understand what it means for your health.",
+    metric_btn: "Metric (kg/cm)", imperial_btn: "Imperial (lb/in)",
+    weight_label: "Weight (kg)", height_label: "Height (cm)",
+    age_label: "Age", gender_label: "Gender",
+    gender_male: "Male", gender_female: "Female",
+    calc_btn: "Calculate BMI", bmi_enter: "Enter your details and click Calculate",
+    bmi_under: "Underweight", bmi_normal: "Normal weight", bmi_over: "Overweight", bmi_obese: "Obese",
+    scale_under: "Underweight", scale_normal: "Normal", scale_over: "Overweight", scale_obese: "Obese",
+    chat_label: "Powered by AI", chat_title: "Ask Cure.ai",
+    chat_sub: "Chat with our AI health assistant for personalised guidance, medication info, and general wellness advice.",
+    chat_name: "Cure.ai Assistant", chat_status: "Online & Ready",
+    chat_placeholder: "Ask about symptoms, medications, diet, exercise...",
+    quick_title: "Quick Questions",
+    q1:"Signs of diabetes?",q2:"Lower blood pressure",q3:"Heart-healthy foods",q4:"Daily water intake",q5:"COVID-19 symptoms",q6:"Better sleep tips",
+    q1f:"What are signs of diabetes?",q2f:"How to lower blood pressure naturally?",q3f:"Best foods for heart health?",q4f:"How much water should I drink daily?",q5f:"What are COVID-19 symptoms?",q6f:"How to improve sleep quality?",
+    emergency_title: "⚠️ Emergency?",
+    emergency_desc: "Chest pain, difficulty breathing, or sudden numbness?",
+    emergency_btn: "📞 Call 108 Now",
+    modal_symptoms: "Common Symptoms", modal_treatment: "Treatment Options", modal_prevention: "Prevention",
+    modal_disclaimer: "⚠️ Always consult a certified medical professional for diagnosis and treatment.",
+    footer_features: "Features", footer_care: "Care", footer_info: "Info",
+    footer_copy: "© 2026 Cure.ai — For informational purposes only. Always consult a qualified healthcare professional.",
+    footer_made: "Made with ❤️ for better health",
+    get_directions: "Get Directions ↗",
+    you_are_here: "📍 You are here",
+    chat_welcome: "👋 Hello! I'm your Cure.ai health assistant. I can help you understand symptoms, answer health questions, explain medications, and guide you toward the right care. How can I help you today?",
+    symptom_cats: {
+      "General":"General","Head & Neuro":"Head & Neuro","Respiratory":"Respiratory",
+      "Digestive":"Digestive","Skin":"Skin","Musculoskeletal":"Musculoskeletal",
+      "Cardiovascular":"Cardiovascular","Mental Health":"Mental Health"
+    }
+  },
+  ta: {
+    settings: "அமைப்புகள்",
+    language: "🌐 மொழி",
+    region: "📍 பகுதி",
+    emergency_numbers: "இந்திய அவசர எண்கள்",
+    settings_footer: "அமைப்புகள் தானாகவே சேமிக்கப்படும்",
+    nav_home: "முகப்பு", nav_monitor: "கண்காணிப்பு", nav_symptoms: "அறிகுறி சோதனை",
+    nav_diseases: "நோய்கள்", nav_consult: "ஆலோசனை", nav_hospitals: "மருத்துவமனைகள்",
+    nav_bmi: "உடல் எடை குறியீடு", nav_ask: "AI கேளுங்கள்",
+    hero_badge: "AI ஆல் இயங்கும் சுகாதார சேவை",
+    hero_title: "உங்கள் அறிவார்ந்த <span class='accent'>சுகாதார</span> உதவியாளர்",
+    hero_sub: "Cure.ai செயற்கை நுண்ணறிவையும் மருத்துவ நிபுணத்துவத்தையும் இணைத்து உங்கள் உடல்நலத்தை கண்காணிக்கிறது, அறிகுறிகளை பகுப்பாய்வு செய்கிறது மற்றும் மருத்துவர்களுடன் இணைக்கிறது.",
+    hero_btn1: "அறிகுறிகளை சோதிக்கவும்", hero_btn2: "மருத்துவரிடம் பேசுங்கள்",
+    stat1_label: "கண்காணிக்கப்படும் நோய்கள்", stat2_label: "ஆன்லைன் மருத்துவர்கள்", stat3_label: "AI துல்லியம்",
+    feat_label: "தேவையான அனைத்தும்", feat_title: "முழுமையான சுகாதார தளம்",
+    feat1_title: "உடல்நல கண்காணிப்பு", feat1_desc: "உடல் அளவுகளை கண்காணிக்கவும், தரவை பதிவு செய்யவும், AI நுண்ணறிவு பெறவும்.",
+    feat2_title: "அறிகுறி பகுப்பாய்வு", feat2_desc: "வகைப்படுத்தப்பட்ட அட்டவணையில் அறிகுறிகளை தேர்ந்தெடுக்கவும். AI 10,000+ நிலைமைகளை ஆய்வு செய்யும்.",
+    feat3_title: "நோய் தரவுத்தளம்", feat3_desc: "நோய்கள் பற்றிய விரிவான கலைக்களஞ்சியம்: காரணங்கள், அறிகுறிகள், சிகிச்சை, தடுப்பு.",
+    feat4_title: "மருத்துவர் ஆலோசனை", feat4_desc: "சான்றளிக்கப்பட்ட நிபுணர்களுடன் உடனடி வீடியோ அல்லது அரட்டை ஆலோசனை பெறுங்கள்.",
+    feat5_title: "அருகிலுள்ள மருத்துவமனைகள்", feat5_desc: "உங்கள் இடத்திற்கு அருகில் உள்ள மருத்துவமனைகள், கிளினிக்குகள் மற்றும் மருந்தகங்களின் நேரடி வரைபடம்.",
+    feat6_title: "உடல் எடை குறியீடு கணிப்பான்", feat6_desc: "உங்கள் BMI கணக்கிட்டு தனிப்பயனாக்கப்பட்ட ஊட்டச்சத்து வழிகாட்டுதல் பெறுங்கள்.",
+    monitor_label: "நிகழ்நேர கண்காணிப்பு", monitor_title: "உடல்நல கண்காணிப்பு",
+    monitor_sub: "உங்கள் தினசரி உடல் அளவுகளை பதிவு செய்யுங்கள். AI போக்குகளை கண்காணித்து எச்சரிக்கைகளை வழங்கும்.",
+    monitor_today: "இன்றைய உடல் அளவுகள்", monitor_log: "புதிய அளவை பதிவு செய்யவும்",
+    vital_hr: "❤️ இதய துடிப்பு", vital_bp: "🩸 இரத்த அழுத்தம்", vital_temp: "🌡️ உடல் வெப்பநிலை",
+    vital_spo2: "💨 ஆக்சிஜன் (SpO2)", vital_weight: "⚖️ எடை",
+    label_hr: "இதய துடிப்பு (bpm)", label_bp: "இரத்த அழுத்தம் (சிஸ்டோலிக்)",
+    label_temp: "வெப்பநிலை (°F)", label_weight: "எடை (கிலோ)",
+    log_btn: "பதிவு செய்", log_success: "✓ வெற்றிகரமாக பதிவாகியது!",
+    sym_label: "AI நோய் கண்டறிதல்", sym_title: "அறிகுறி பகுப்பாய்வு",
+    sym_sub: "வகைப்படுத்தப்பட்ட அட்டவணையில் உங்கள் அறிகுறிகளை தேர்ந்தெடுக்கவும். AI நிலைமைகளை பரிந்துரைக்கும்.",
+    sym_selected: "தேர்ந்தெடுத்த அறிகுறிகள்:", sym_analyze: "🔬 AI யால் பகுப்பாய்வு செய்",
+    sym_result_title: "AI பகுப்பாய்வு முடிவுகள்",
+    sym_placeholder: "அறிகுறிகளை தேர்ந்தெடுத்து பகுப்பாய்வு செய்ய கிளிக் செய்யுங்கள்.",
+    sym_analysing: "🔬 அறிகுறிகளை பகுப்பாய்வு செய்கிறது...",
+    sym_disclaimer: "⚠️ இது AI அடிப்படையிலான தகவல் மட்டுமே. இது மருத்துவ நோய் கண்டறிதல் அல்ல. சரியான மதிப்பீட்டிற்கு தகுதிவாய்ந்த மருத்துவரை அணுகவும்.",
+    db_label: "மருத்துவ கலைக்களஞ்சியம்", db_title: "நோய் தரவுத்தளம்",
+    db_sub: "நோய்கள், நிலைமைகள் மற்றும் சிகிச்சைகளின் விரிவான தரவுத்தளத்தை ஆராயுங்கள்.",
+    db_placeholder: "நோய்கள், நிலைமைகள், அறிகுறிகளை தேடுங்கள்...", db_btn: "தேடு",
+    consult_label: "நிபுணர் சேவை", consult_title: "மருத்துவர் ஆலோசனை",
+    consult_sub: "சான்றளிக்கப்பட்ட நிபுணர்களுடன் உடனடி வீடியோ அல்லது அரட்டை ஆலோசனை பெறுங்கள்.",
+    avail_now: "இப்போது கிடைக்கிறார்", book_btn: "ஆலோசனை பதிவு செய்யவும்",
+    hosp_label: "அருகில் சேவை கண்டுபிடிக்கவும்", hosp_title: "அருகிலுள்ள மருத்துவமனைகள்",
+    hosp_sub: "உங்கள் தற்போதைய இடத்திற்கு அருகில் உள்ள மருத்துவமனைகள், கிளினிக்குகள் மற்றும் மருந்தகங்களின் நேரடி வரைபடம்.",
+    map_all: "அனைத்தும்", map_hosp: "🏥 மருத்துவமனைகள்", map_clinic: "🏨 கிளினிக்குகள்",
+    map_pharma: "💊 மருந்தகங்கள்", map_locate: "📍 என் இடம்",
+    bmi_label: "உடல் அளவீடுகள்", bmi_title: "உடல் எடை குறியீடு கணிப்பான்",
+    bmi_sub: "உங்கள் BMI கணக்கிட்டு அது உங்கள் உடல்நலத்திற்கு என்ன அர்த்தம் என்று புரிந்துகொள்ளுங்கள்.",
+    metric_btn: "மெட்ரிக் (கிலோ/செ.மீ)", imperial_btn: "இம்பீரியல் (பவுண்ட்/அங்குலம்)",
+    weight_label: "எடை (கிலோ)", height_label: "உயரம் (செ.மீ)",
+    age_label: "வயது", gender_label: "பாலினம்",
+    gender_male: "ஆண்", gender_female: "பெண்",
+    calc_btn: "BMI கணக்கிடு", bmi_enter: "விவரங்களை உள்ளிட்டு கணக்கிடு கிளிக் செய்யுங்கள்",
+    bmi_under: "எடை குறைவு", bmi_normal: "சாதாரண எடை", bmi_over: "அதிக எடை", bmi_obese: "பருமன்",
+    scale_under: "எடை குறைவு", scale_normal: "சாதாரண", scale_over: "அதிக எடை", scale_obese: "பருமன்",
+    chat_label: "AI ஆல் இயக்கப்படுகிறது", chat_title: "Cure.ai கேளுங்கள்",
+    chat_sub: "தனிப்பயனாக்கப்பட்ட வழிகாட்டுதல், மருந்து தகவல்கள் மற்றும் பொது ஆரோக்கிய ஆலோசனைகளுக்கு AI உதவியாளரிடம் அரட்டை அடிக்கவும்.",
+    chat_name: "Cure.ai உதவியாளர்", chat_status: "ஆன்லைன் & தயார்",
+    chat_placeholder: "அறிகுறிகள், மருந்துகள், உணவு, உடற்பயிற்சி பற்றி கேளுங்கள்...",
+    quick_title: "விரைவு கேள்விகள்",
+    q1:"நீரிழிவு அறிகுறிகள்?",q2:"இரத்த அழுத்தம் குறைக்க",q3:"இதயத்திற்கு நல்ல உணவு",q4:"தினசரி தண்ணீர் அளவு",q5:"COVID-19 அறிகுறிகள்",q6:"தூக்கம் மேம்பட",
+    q1f:"நீரிழிவு நோயின் அறிகுறிகள் என்ன?",q2f:"இரத்த அழுத்தத்தை இயற்கையாக எப்படி குறைப்பது?",q3f:"இதய ஆரோக்கியத்திற்கு சிறந்த உணவுகள் என்ன?",q4f:"தினசரி எவ்வளவு தண்ணீர் குடிக்க வேண்டும்?",q5f:"COVID-19 அறிகுறிகள் என்ன?",q6f:"தூக்கத்தின் தரத்தை எவ்வாறு மேம்படுத்துவது?",
+    emergency_title: "⚠️ அவசரநிலையா?",
+    emergency_desc: "நெஞ்சு வலி, சுவாசிக்க சிரமம் அல்லது திடீர் மரத்துப்போதல்?",
+    emergency_btn: "📞 108 அழைக்கவும்",
+    modal_symptoms: "பொதுவான அறிகுறிகள்", modal_treatment: "சிகிச்சை விருப்பங்கள்", modal_prevention: "தடுப்பு",
+    modal_disclaimer: "⚠️ நோய் கண்டறிதல் மற்றும் சிகிச்சைக்கு எப்போதும் சான்றளிக்கப்பட்ட மருத்துவ நிபுணரை அணுகவும்.",
+    footer_features: "அம்சங்கள்", footer_care: "சேவை", footer_info: "தகவல்",
+    footer_copy: "© 2026 Cure.ai — தகவல் நோக்கங்களுக்கு மட்டுமே. எப்போதும் தகுதிவாய்ந்த சுகாதார நிபுணரை அணுகவும்.",
+    footer_made: "சிறந்த ஆரோக்கியத்திற்காக ❤️ உடன் உருவாக்கப்பட்டது",
+    get_directions: "வழிகாட்டுதல் பெறுங்கள் ↗",
+    you_are_here: "📍 நீங்கள் இங்கே இருக்கிறீர்கள்",
+    chat_welcome: "👋 வணக்கம்! நான் உங்கள் Cure.ai உடல்நல உதவியாளர். அறிகுறிகளை புரிந்துகொள்ள, சுகாதார கேள்விகளுக்கு பதிலளிக்க, மருந்துகளை விளக்க உதவுவேன். இன்று எப்படி உதவட்டுமா?",
+    symptom_cats: {
+      "General":"பொது","Head & Neuro":"தலை & நரம்பியல்","Respiratory":"சுவாச",
+      "Digestive":"செரிமான","Skin":"தோல்","Musculoskeletal":"தசை எலும்பு",
+      "Cardiovascular":"இதயம் & இரத்தம்","Mental Health":"மன நலம்"
+    }
+  }
+};
+
+const regionData = {
+  TN: { name:"Tamil Nadu", center:[11.1271,78.6569], zoom:7,
+    hospitals:[
+      {lat:9.9252,lng:78.1198,name:"Madurai Government Hospital",type:"hospital",info:"24/7 அவசர சேவை • பொது மருத்துவம்"},
+      {lat:13.0827,lng:80.2707,name:"Stanley Medical College Hospital, Chennai",type:"hospital",info:"24/7 அவசர சேவை • சிறப்பு சேவைகள்"},
+      {lat:10.7905,lng:78.7047,name:"Thanjavur Medical College Hospital",type:"hospital",info:"24/7 அவசர சேவை"},
+      {lat:11.6643,lng:78.1460,name:"Salem Government Hospital",type:"hospital",info:"அவசர சேவை • பொது மருத்துவம்"},
+      {lat:9.5127,lng:77.6369,name:"Srivilliputhur Govt Hospital",type:"hospital",info:"24/7 அவசர சேவை"},
+      {lat:9.5185,lng:77.6420,name:"Meenakshi Clinic",type:"clinic",info:"பொது மருத்துவம் • திங்கள்-சனி 9AM-6PM"},
+      {lat:9.5070,lng:77.6310,name:"Apollo Pharmacy",type:"pharmacy",info:"24 மணி நேரமும் திறந்திருக்கும்"},
+      {lat:11.0168,lng:76.9558,name:"Coimbatore Medical College Hospital",type:"hospital",info:"24/7 அவசர சேவை"},
+      {lat:8.7139,lng:77.7567,name:"Tirunelveli Medical College",type:"hospital",info:"24/7 அவசர சேவை"},
+    ],
+    emergency:[
+      {num:"108",label:"Ambulance / Ambulance"},
+      {num:"104",label:"Health Helpline / ஆரோக்கிய"},
+      {num:"100",label:"Police / காவல்"},
+      {num:"101",label:"Fire / தீயணைப்பு"},
+      {num:"1800-425-4425",label:"AYUSH Helpline"},
+      {num:"14410",label:"NHA / தேசிய சுகாதாரம்"},
+    ]
+  },
+  MH: { name:"Maharashtra", center:[19.7515,75.7139], zoom:7,
+    hospitals:[
+      {lat:19.0760,lng:72.8777,name:"KEM Hospital, Mumbai",type:"hospital",info:"24/7 Emergency • Multi-specialty"},
+      {lat:18.5204,lng:73.8567,name:"Sassoon General Hospital, Pune",type:"hospital",info:"24/7 Emergency"},
+      {lat:21.1458,lng:79.0882,name:"Government Medical College, Nagpur",type:"hospital",info:"24/7 Emergency"},
+      {lat:19.0760,lng:72.8900,name:"Hinduja Hospital",type:"hospital",info:"Private • 24/7"},
+      {lat:18.5204,lng:73.8700,name:"Jehangir Hospital, Pune",type:"clinic",info:"Multi-specialty Clinic"},
+      {lat:19.0760,lng:72.8650,name:"MedPlus Pharmacy Mumbai",type:"pharmacy",info:"Open 8AM-10PM"},
+    ],
+    emergency:[
+      {num:"108",label:"Ambulance"},
+      {num:"104",label:"Health Helpline"},
+      {num:"100",label:"Police"},
+      {num:"101",label:"Fire"},
+      {num:"1916",label:"Maharashtra CM Helpline"},
+      {num:"14410",label:"NHA Helpline"},
+    ]
+  },
+  KA: { name:"Karnataka", center:[15.3173,75.7139], zoom:7,
+    hospitals:[
+      {lat:12.9716,lng:77.5946,name:"Bowring & Lady Curzon Hospital, Bengaluru",type:"hospital",info:"24/7 Emergency"},
+      {lat:12.9716,lng:77.6000,name:"Victoria Hospital, Bengaluru",type:"hospital",info:"24/7 Emergency • Trauma Centre"},
+      {lat:12.2958,lng:76.6394,name:"K R Hospital, Mysuru",type:"hospital",info:"24/7 Emergency"},
+      {lat:15.3647,lng:75.1240,name:"KIMS Hospital, Hubballi",type:"hospital",info:"24/7 Emergency"},
+      {lat:12.9716,lng:77.5800,name:"Manipal Hospital, Bengaluru",type:"clinic",info:"Multi-specialty"},
+      {lat:12.9716,lng:77.6100,name:"Apollo Pharmacy Bengaluru",type:"pharmacy",info:"Open 24 hours"},
+    ],
+    emergency:[
+      {num:"108",label:"Ambulance"},
+      {num:"104",label:"Health Helpline"},
+      {num:"100",label:"Police"},
+      {num:"112",label:"Emergency Response"},
+      {num:"1800-425-9999",label:"Karnataka Health"},
+      {num:"14410",label:"NHA Helpline"},
+    ]
+  },
+  KE: { name:"Kerala", center:[10.8505,76.2711], zoom:7,
+    hospitals:[
+      {lat:8.5241,lng:76.9366,name:"Government Medical College, Thiruvananthapuram",type:"hospital",info:"24/7 Emergency"},
+      {lat:9.9312,lng:76.2673,name:"Medical College Hospital, Kochi",type:"hospital",info:"24/7 Emergency"},
+      {lat:11.2588,lng:75.7804,name:"Government Medical College, Kozhikode",type:"hospital",info:"24/7 Emergency"},
+      {lat:8.5241,lng:76.9500,name:"KIMS Hospital, Trivandrum",type:"clinic",info:"Multi-specialty"},
+      {lat:9.9312,lng:76.2800,name:"Lakeshore Hospital, Kochi",type:"hospital",info:"24/7 Emergency"},
+      {lat:9.9312,lng:76.2500,name:"MedPlus Pharmacy Kochi",type:"pharmacy",info:"Open 8AM-10PM"},
+    ],
+    emergency:[
+      {num:"108",label:"Ambulance"},
+      {num:"104",label:"Health Helpline"},
+      {num:"100",label:"Police"},
+      {num:"1056",label:"Kerala Health"},
+      {num:"0471-2552056",label:"Health Dept TVM"},
+      {num:"14410",label:"NHA Helpline"},
+    ]
+  },
+  DL: { name:"Delhi NCR", center:[28.6139,77.2090], zoom:10,
+    hospitals:[
+      {lat:28.6139,lng:77.2090,name:"AIIMS, New Delhi",type:"hospital",info:"24/7 Emergency • Premier Institute"},
+      {lat:28.6517,lng:77.2219,name:"Safdarjung Hospital",type:"hospital",info:"24/7 Emergency"},
+      {lat:28.6692,lng:77.2239,name:"Ram Manohar Lohia Hospital",type:"hospital",info:"24/7 Emergency"},
+      {lat:28.5355,lng:77.3910,name:"Fortis Hospital, Noida",type:"hospital",info:"24/7 Emergency"},
+      {lat:28.6139,lng:77.2200,name:"Apollo Pharmacy Delhi",type:"pharmacy",info:"Open 24 hours"},
+      {lat:28.6300,lng:77.2100,name:"Max Clinic Delhi",type:"clinic",info:"Multi-specialty"},
+    ],
+    emergency:[
+      {num:"108",label:"Ambulance"},
+      {num:"102",label:"Delhi Ambulance"},
+      {num:"100",label:"Police"},
+      {num:"1031",label:"Delhi Health"},
+      {num:"011-23978046",label:"AIIMS Emergency"},
+      {num:"14410",label:"NHA Helpline"},
+    ]
+  },
+  TG: { name:"Telangana", center:[18.1124,79.0193], zoom:7,
+    hospitals:[
+      {lat:17.3850,lng:78.4867,name:"Osmania General Hospital, Hyderabad",type:"hospital",info:"24/7 Emergency"},
+      {lat:17.3850,lng:78.5000,name:"Gandhi Hospital, Hyderabad",type:"hospital",info:"24/7 Emergency • COVID Centre"},
+      {lat:17.4000,lng:78.4700,name:"Niloufer Hospital",type:"hospital",info:"24/7 Emergency • Paediatrics"},
+      {lat:17.4126,lng:78.4071,name:"KIMS Hospitals, Hyderabad",type:"clinic",info:"Multi-specialty"},
+      {lat:17.3850,lng:78.5100,name:"Apollo Pharmacy Hyderabad",type:"pharmacy",info:"Open 24 hours"},
+      {lat:17.3600,lng:78.4800,name:"Care Hospital, Hyderabad",type:"hospital",info:"24/7 Emergency"},
+    ],
+    emergency:[
+      {num:"108",label:"Ambulance"},
+      {num:"104",label:"Health Helpline"},
+      {num:"100",label:"Police"},
+      {num:"1902",label:"TS CM Helpline"},
+      {num:"040-23453456",label:"TS Health Dept"},
+      {num:"14410",label:"NHA Helpline"},
+    ]
+  }
+};
+
+function t(key) { return translations[currentLang][key] || translations['en'][key] || key; }
+
+function applyTranslations() {
+  const L = translations[currentLang];
+  const isTamil = currentLang === 'ta';
+  document.documentElement.lang = currentLang;
+  document.body.style.fontFamily = isTamil ? "'Noto Sans Tamil','DM Sans',sans-serif" : "'DM Sans',sans-serif";
+
+  // Nav links
+  const navLinks = document.querySelectorAll('.nav-links a:not(.nav-cta)');
+  const navKeys = ['nav_home','nav_monitor','nav_symptoms','nav_diseases','nav_consult','nav_hospitals','nav_bmi'];
+  navLinks.forEach((a,i) => { if(navKeys[i]) a.textContent = L[navKeys[i]] || a.textContent; });
+  const ctaLink = document.querySelector('.nav-cta');
+  if(ctaLink) ctaLink.textContent = L.nav_ask;
+
+  // Settings panel translations
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if(L[key]) el.textContent = L[key];
+  });
+
+  // Hero
+  const heroBadge = document.querySelector('.hero-badge');
+  if(heroBadge) { heroBadge.innerHTML = `<span></span>${L.hero_badge}`; }
+  const heroTitle = document.querySelector('h1');
+  if(heroTitle) heroTitle.innerHTML = L.hero_title;
+  const heroSub = document.querySelector('.hero-sub');
+  if(heroSub) heroSub.textContent = L.hero_sub;
+  const heroBtn1 = document.querySelector('.hero-btns .btn-primary');
+  if(heroBtn1) heroBtn1.textContent = L.hero_btn1;
+  const heroBtn2 = document.querySelector('.hero-btns .btn-outline');
+  if(heroBtn2) heroBtn2.textContent = L.hero_btn2;
+
+  // Stats
+  const statLabels = document.querySelectorAll('.stat-label');
+  if(statLabels[0]) statLabels[0].textContent = L.stat1_label;
+  if(statLabels[1]) statLabels[1].textContent = L.stat2_label;
+  if(statLabels[2]) statLabels[2].textContent = L.stat3_label;
+
+  // Features section
+  setTxt('.features-grid', [['.section-label',L.feat_label],['.section-title',L.feat_title]], true, document);
+  const sl = document.querySelectorAll('section');
+  sl.forEach(sec => {
+    const lbl = sec.querySelector('.section-label');
+    const ttl = sec.querySelector('.section-title');
+    const sub = sec.querySelector('.section-sub');
+    const id = sec.id;
+    if(id==='monitor'){ if(lbl) lbl.textContent=L.monitor_label; if(ttl) ttl.textContent=L.monitor_title; if(sub) sub.textContent=L.monitor_sub; }
+    if(id==='symptoms'){ if(lbl) lbl.textContent=L.sym_label; if(ttl) ttl.textContent=L.sym_title; if(sub) sub.textContent=L.sym_sub; }
+    if(id==='diseases'){ if(lbl) lbl.textContent=L.db_label; if(ttl) ttl.textContent=L.db_title; if(sub) sub.textContent=L.db_sub; }
+    if(id==='consult'){ if(lbl) lbl.textContent=L.consult_label; if(ttl) ttl.textContent=L.consult_title; if(sub) sub.textContent=L.consult_sub; }
+    if(id==='hospitals'){ if(lbl) lbl.textContent=L.hosp_label; if(ttl) ttl.textContent=L.hosp_title; if(sub) sub.textContent=L.hosp_sub; }
+    if(id==='bmi'){ if(lbl) lbl.textContent=L.bmi_label; if(ttl) ttl.textContent=L.bmi_title; if(sub) sub.textContent=L.bmi_sub; }
+    if(id==='ai-chat'){ if(lbl) lbl.textContent=L.chat_label; if(ttl) ttl.textContent=L.chat_title; if(sub) sub.textContent=L.chat_sub; }
+  });
+
+  // Feature cards
+  const fcTitles = document.querySelectorAll('.feature-title');
+  const fcDescs = document.querySelectorAll('.feature-desc');
+  const fcT = [L.feat1_title,L.feat2_title,L.feat3_title,L.feat4_title,L.feat5_title,L.feat6_title];
+  const fcD = [L.feat1_desc,L.feat2_desc,L.feat3_desc,L.feat4_desc,L.feat5_desc,L.feat6_desc];
+  fcTitles.forEach((el,i) => { if(fcT[i]) el.textContent=fcT[i]; });
+  fcDescs.forEach((el,i) => { if(fcD[i]) el.textContent=fcD[i]; });
+
+  // Monitor
+  const mTitles = document.querySelectorAll('.monitor-title');
+  if(mTitles[0]) mTitles[0].textContent = L.monitor_today;
+  if(mTitles[1]) mTitles[1].textContent = L.monitor_log;
+  const vNames = document.querySelectorAll('.vital-name');
+  const vNKeys = ['vital_hr','vital_bp','vital_temp','vital_spo2','vital_weight'];
+  vNames.forEach((el,i)=>{ if(vNKeys[i]) el.innerHTML = L[vNKeys[i]] || el.innerHTML; });
+  const formLabels = document.querySelectorAll('#monitor .form-label');
+  const fLKeys = ['label_hr','label_bp','label_temp','label_weight'];
+  formLabels.forEach((el,i)=>{ if(fLKeys[i]) el.textContent=L[fLKeys[i]]; });
+  const miniBtns = document.querySelectorAll('.mini-btn');
+  miniBtns.forEach(b => b.textContent = L.log_btn);
+
+  // Symptom checker
+  const selLbl = document.querySelector('.selected-label');
+  if(selLbl) { selLbl.innerHTML = `${L.sym_selected} <span id="selCount">${selectedSymptoms.length}</span>`; }
+  const analyzeBtn = document.querySelector('.analyze-btn');
+  if(analyzeBtn) analyzeBtn.textContent = L.sym_analyze;
+  const resultTitle = document.querySelector('.result-title');
+  if(resultTitle) resultTitle.textContent = L.sym_result_title;
+  const phEl = document.querySelector('.result-placeholder p');
+  if(phEl) phEl.textContent = L.sym_placeholder;
+
+  // Disease DB
+  const dbInp = document.getElementById('diseaseSearch');
+  if(dbInp) dbInp.placeholder = L.db_placeholder;
+  const dbSBtn = document.querySelector('.db-search-btn');
+  if(dbSBtn) dbSBtn.textContent = L.db_btn;
+
+  // Doctors
+  const bookBtns = document.querySelectorAll('.book-btn');
+  bookBtns.forEach(b => b.textContent = L.book_btn);
+  const availTexts = document.querySelectorAll('.availability');
+  availTexts.forEach(el => {
+    const dot = el.querySelector('.avail-dot');
+    if(dot && dot.classList.contains('online')) { el.innerHTML = `<div class="avail-dot online"></div>${L.avail_now}`; }
+  });
+
+  // Map buttons
+  const mapBtns = document.querySelectorAll('.map-btn');
+  const mapKeys = ['map_all','map_hosp','map_clinic','map_pharma','map_locate'];
+  mapBtns.forEach((b,i) => { if(mapKeys[i]) b.textContent = L[mapKeys[i]]; });
+
+  // BMI
+  const metricBtn = document.getElementById('metricBtn');
+  const imperialBtn = document.getElementById('imperialBtn');
+  if(metricBtn) metricBtn.textContent = L.metric_btn;
+  if(imperialBtn) imperialBtn.textContent = L.imperial_btn;
+  const wLbl = document.getElementById('weightLabel');
+  const hLbl = document.getElementById('heightLabel');
+  if(wLbl) wLbl.textContent = L.weight_label;
+  if(hLbl) hLbl.textContent = L.height_label;
+  const aLbl = document.querySelector('#bmi .form-label:nth-of-type(3)');
+  const gLbl = document.querySelector('#bmi .form-label:nth-of-type(4)');
+  document.querySelectorAll('#bmi .form-label').forEach(el => {
+    if(el.textContent.includes('Age')||el.textContent.includes('வயது')) el.textContent=L.age_label;
+    if(el.textContent.includes('Gender')||el.textContent.includes('பாலினம்')) el.textContent=L.gender_label;
+  });
+  const calcBtn = document.querySelector('.calc-btn');
+  if(calcBtn) calcBtn.textContent = L.calc_btn;
+  const genderSel = document.getElementById('bmiGender');
+  if(genderSel) { genderSel.options[0].text=L.gender_male; genderSel.options[1].text=L.gender_female; }
+  const bmiResultEl = document.getElementById('bmiResult');
+  if(bmiResultEl && bmiResultEl.querySelector('.bmi-enter-msg')) bmiResultEl.querySelector('.bmi-enter-msg').textContent = L.bmi_enter;
+
+  // Chat
+  const chatNameEl = document.querySelector('.chat-name');
+  if(chatNameEl) chatNameEl.textContent = L.chat_name;
+  const chatInp = document.getElementById('chatInput');
+  if(chatInp) chatInp.placeholder = L.chat_placeholder;
+  const quickTitle = document.querySelector('.quick-title');
+  if(quickTitle) quickTitle.textContent = L.quick_title;
+  const quickChips = document.querySelectorAll('.quick-chip');
+  const qKeys = ['q1','q2','q3','q4','q5','q6'];
+  quickChips.forEach((c,i) => { if(qKeys[i]) c.textContent = L[qKeys[i]]; c.onclick = () => askQuick(L[qKeys[i]+'f']||c.textContent); });
+  const emTitle = document.querySelector('.chat-sidebar .quick-card:last-child .quick-title');
+  if(emTitle) emTitle.innerHTML = L.emergency_title;
+  const emDesc = document.querySelector('.chat-sidebar .quick-card:last-child p');
+  if(emDesc) emDesc.textContent = L.emergency_desc;
+  const emBtn = document.querySelector('.chat-sidebar .quick-card:last-child button');
+  if(emBtn) emBtn.textContent = L.emergency_btn;
+
+  // Footer
+  const fCols = document.querySelectorAll('.footer-col h4');
+  if(fCols[0]) fCols[0].textContent = L.footer_features;
+  if(fCols[1]) fCols[1].textContent = L.footer_care;
+  if(fCols[2]) fCols[2].textContent = L.footer_info;
+  const fNotes = document.querySelectorAll('.footer-note');
+  if(fNotes[0]) fNotes[0].textContent = L.footer_copy;
+  if(fNotes[1]) fNotes[1].textContent = L.footer_made;
+
+  // Re-init symptom checker categories
+  initSymptomChecker();
+}
+
+function setTxt(scope, pairs, isParent, ctx) {}
+
+function openSettings() {
+  document.getElementById('settingsOverlay').classList.add('open');
+  renderEmergency();
+}
+function closeSettings() { document.getElementById('settingsOverlay').classList.remove('open'); }
+
+function setLanguage(lang) {
+  currentLang = lang;
+  document.getElementById('langEN').classList.toggle('active', lang==='en');
+  document.getElementById('langTA').classList.toggle('active', lang==='ta');
+  document.getElementById('checkEN').style.opacity = lang==='en' ? '1' : '0';
+  document.getElementById('checkTA').style.opacity = lang==='ta' ? '1' : '0';
+  applyTranslations();
+}
+
+function setRegion(code) {
+  currentRegion = code;
+  ['TN','MH','KA','KE','DL','TG'].forEach(r => {
+    const el = document.getElementById('region'+r);
+    const chk = document.getElementById('check'+r);
+    if(el) el.classList.toggle('active', r===code);
+    if(chk) chk.style.opacity = r===code ? '1' : '0';
+  });
+  renderEmergency();
+  updateMapForRegion(code);
+}
+
+function renderEmergency() {
+  const region = regionData[currentRegion];
+  const grid = document.getElementById('emergencyGrid');
+  if(!grid||!region) return;
+  grid.innerHTML = region.emergency.map(e => `
+    <div class="em-card">
+      <div class="em-num">${e.num}</div>
+      <div class="em-label">${e.label}</div>
+    </div>`).join('');
+}
+
+let mapUserMarker = null;
+function updateMapForRegion(code) {
+  const region = regionData[code];
+  if(!map||!region) return;
+  // Remove old markers
+  markers.forEach(m => map.removeLayer(m));
+  markers = [];
+  if(mapUserMarker) { map.removeLayer(mapUserMarker); mapUserMarker=null; }
+
+  map.setView(region.center, region.zoom);
+
+  const icons2 = {
+    hospital: L.divIcon({html:'<div style="background:#ff4d6d;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3)">🏥</div>',iconSize:[32,32],iconAnchor:[16,16],className:''}),
+    clinic: L.divIcon({html:'<div style="background:#4da6ff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3)">🏨</div>',iconSize:[32,32],iconAnchor:[16,16],className:''}),
+    pharmacy: L.divIcon({html:'<div style="background:#00C896;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3)">💊</div>',iconSize:[32,32],iconAnchor:[16,16],className:''}),
+  };
+
+  const dirLabel = t('get_directions');
+  region.hospitals.forEach(p => {
+    const m = L.marker([p.lat,p.lng],{icon:icons2[p.type]}).addTo(map);
+    m._type = p.type;
+    m.bindPopup(`<b>${p.name}</b><br><small>${p.info}</small><br><a href="https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}" target="_blank" style="color:#00C896">${dirLabel}</a>`);
+    markers.push(m);
+  });
+}
+
+// Override initMap to use region data
+const _origInitMap = initMap;
+
+window.onload = () => {
+  initSymptomChecker();
+  initDiseaseDB();
+  initMapWithRegion();
+  document.getElementById('regionTN').classList.add('active');
+  document.getElementById('checkTN').style.opacity = '1';
+  document.getElementById('checkEN').style.opacity = '1';
+  renderEmergency();
+};
+
+function initMapWithRegion() {
+  const region = regionData['TN'];
+  map = L.map('map').setView(region.center, 7);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+  updateMapForRegion('TN');
+}
+
+// Active nav on scroll
+window.addEventListener('scroll', () => {
+  const sections = document.querySelectorAll('section[id]');
+  const scrollY = window.scrollY;
+  sections.forEach(s => {
+    if (scrollY >= s.offsetTop - 80 && scrollY < s.offsetTop + s.offsetHeight) {
+      document.querySelectorAll('.nav-links a').forEach(a => {
+        a.classList.toggle('active', a.getAttribute('href')==='#'+s.id);
+      });
+    }
+  });
+});
+
+/* ── LOGIN PAGE LOGIC ── */
+let currentTab = 'signin';
+
+function switchTab(tab) {
+  currentTab = tab;
+  const isRegister = tab === 'register';
+
+  document.getElementById('tabSignin').classList.toggle('active', !isRegister);
+  document.getElementById('tabRegister').classList.toggle('active', isRegister);
+
+  // Toggle register-only fields visibility via parent class
+  const wrap = document.getElementById('loginFormWrap');
+  wrap.classList.toggle('tab-register', isRegister);
+
+  // Update copy
+  document.querySelector('.lf-title').textContent = isRegister ? 'Create your account' : 'Welcome back';
+  document.querySelector('.lf-desc').textContent = isRegister ? 'Join Cure.ai for free — no credit card needed.' : 'Sign in to your Cure.ai account';
+  document.getElementById('loginSubmitBtn').textContent = isRegister ? 'Create Account' : 'Sign In';
+  document.getElementById('rowRemember').style.display = isRegister ? 'none' : '';
+  document.getElementById('authFooterNote').innerHTML = isRegister
+    ? 'Already have an account? <a href="#" onclick="switchTab(\'signin\');return false">Sign in</a>'
+    : "Don't have an account? <a href=\"#\" onclick=\"switchTab('register');return false\">Create one free</a>";
+
+  // Clear errors
+  clearErrors();
+  document.getElementById('loginSuccess').classList.remove('show');
+}
+
+function clearErrors() {
+  document.querySelectorAll('.lform-group.error').forEach(el => el.classList.remove('error'));
+}
+
+function setError(fieldId, errId) {
+  document.getElementById(fieldId).closest('.lform-group').classList.add('error');
+}
+
+function togglePwd(inputId, btn) {
+  const inp = document.getElementById(inputId);
+  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
+  else { inp.type = 'password'; btn.textContent = '👁️'; }
+}
+
+function validateEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+
+function handleAuth() {
+  clearErrors();
+  let valid = true;
+
+  const email = document.getElementById('loginEmail').value.trim();
+  const pwd = document.getElementById('loginPwd').value;
+
+  if (!validateEmail(email)) { setError('loginEmail','errEmail'); valid = false; }
+  if (pwd.length < 6) { setError('loginPwd','errPwd'); valid = false; }
+
+  if (currentTab === 'register') {
+    const name = document.getElementById('regName').value.trim();
+    const phone = document.getElementById('regPhone').value.trim();
+    const confirm = document.getElementById('regConfirm').value;
+    if (!name) { setError('regName','errName'); valid = false; }
+    if (phone.length < 8) { setError('regPhone','errPhone'); valid = false; }
+    if (confirm !== pwd) { setError('regConfirm','errConfirm'); valid = false; }
+  }
+
+  if (!valid) return;
+
+  // Simulate auth
+  const btn = document.getElementById('loginSubmitBtn');
+  btn.textContent = currentTab === 'register' ? 'Creating account…' : 'Signing in…';
+  btn.disabled = true;
+  btn.style.opacity = '0.7';
+
+  setTimeout(() => {
+    const successEl = document.getElementById('loginSuccess');
+    const msgEl = document.getElementById('loginSuccessMsg');
+    msgEl.textContent = currentTab === 'register'
+      ? '🎉 Account created! Welcome to Cure.ai!'
+      : 'Welcome back! Loading your dashboard…';
+    successEl.classList.add('show');
+
+    setTimeout(() => {
+      document.getElementById('loginPage').classList.add('hidden');
+      document.body.style.overflow = '';
+    }, 1200);
+  }, 1100);
+}
+
+function socialLogin(provider) {
+  const btn = document.getElementById('loginSubmitBtn');
+  const successEl = document.getElementById('loginSuccess');
+  const msgEl = document.getElementById('loginSuccessMsg');
+  msgEl.textContent = `Signing in with ${provider}…`;
+  successEl.classList.add('show');
+  setTimeout(() => {
+    document.getElementById('loginPage').classList.add('hidden');
+    document.body.style.overflow = '';
+  }, 1200);
+}
+
+function showForgot() {
+  const emailVal = document.getElementById('loginEmail').value.trim();
+  if (!validateEmail(emailVal)) {
+    alert('Please enter your email address first, then click Forgot password.');
+    document.getElementById('loginEmail').focus();
+    return;
+  }
+  const successEl = document.getElementById('loginSuccess');
+  const msgEl = document.getElementById('loginSuccessMsg');
+  msgEl.textContent = `✉️ Password reset link sent to ${emailVal}`;
+  successEl.classList.add('show');
+}
+
+// Prevent main page scroll while login is showing
+document.addEventListener('DOMContentLoaded', () => {
+  if (!document.getElementById('loginPage').classList.contains('hidden')) {
+    document.body.style.overflow = 'hidden';
+  }
+});
+</script>
+</body>
+</html>
